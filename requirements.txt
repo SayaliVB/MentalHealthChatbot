@@ -1,0 +1,11 @@
+streamlit
+streamlit-chat
+langchain
+langchain-openai
+sentence-transformers
+PyPDF2
+torch
+numpy
+scikit-learn
+transformers
+requests
