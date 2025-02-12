@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Empower Mental Health</title>
-    <link rel="stylesheet" href="../static/css/register.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
 </head>
 <body>
     <div class="signup-container">
         <div class="logo">
-            <img src="../static/images/logo.png" alt="Empower Mental Health Logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Empower Mental Health Logo">
         </div>
         <h2>Get Started Now!</h2>
-        <form id="registration-form">
+        <form id="registration-form" method="POST">
             <div class="name-container">
                 <div class="input-group">
                     <label for="first-name">First Name:</label>
@@ -49,15 +49,15 @@
             
             <button type="submit" class="signup-btn" id="submit-btn" disabled>Sign Up</button>
             
-            <p>Already Have An Account? <a href="#">Login</a></p>
+            <p>Already Have An Account? <a href="/login">Login</a></p>
             
             <div class="divider">OR</div>
             
             <button type="button" class="google-btn">
-                <img src="../static/images/google.png" alt="Google Logo">
+                <img src="{{ url_for('static', filename='images/google.png') }}" alt="Google Logo">
             </button>
         </form>
     </div>
-
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
 </body>
 </html>
