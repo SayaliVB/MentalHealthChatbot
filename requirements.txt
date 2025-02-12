@@ -1,11 +1,4 @@
-streamlit
-streamlit-chat
-langchain
-langchain-openai
-sentence-transformers
-PyPDF2
-torch
-numpy
-scikit-learn
-transformers
-requests
+flask
+psycopg2-binary
+flask-cors
+flask_bcrypt
