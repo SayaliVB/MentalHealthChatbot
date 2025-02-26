@@ -1,3 +1,4 @@
+import subprocess
 from flask import Flask, jsonify, redirect, session, request, render_template
 import json
 import requests
@@ -7,6 +8,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 global_ip='127.0.0.1:5000'
+app.secret_key = 'fwe_5HvBK=9HvoqSD87om'
 
 # Routes for user registration
 
@@ -51,9 +53,45 @@ def login():
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
 
-        r = requests.post(f'http://{global_ip}/verify_login', json=data, headers={'Content-Type': 'application/json'})
+        response_data = requests.post(f'http://{global_ip}/verify_login', json=data, headers={'Content-Type': 'application/json'})
+        if response_data.status_code == 200:
+            json_data = json.loads(response_data.text)
+            session["userid"] = json_data["id"]
+            session["useremail"]= email
+            session["username"] = json_data["firstname"]
+            session.modified = True
 
-        return r.json(), r.status_code
+        if session.get('username'):
+            print(session["username"])
+
+
+        return response_data.json(), response_data.status_code
+
+
+# Function to start Streamlit app
+def run_streamlit():
+    streamlit_script = "app_culture.py"
+    subprocess.Popen(
+        ["streamlit", "run", streamlit_script, "--server.headless", "true"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True  # Prevents opening a new tab
+    )
+
+# Route to redirect to Streamlit
+@app.route('/open-streamlit')
+def open_streamlit():
+    # Ensure Streamlit is running before redirecting
+    run_streamlit()
+    print(session.items())
+    if session.get('username'):
+        print(session["username"])
+    user = session.get("username", "Guest")  # Get session variable
+    streamlit_url = f"http://localhost:8501?user={user}"  # Pass session data
+    return render_template("streamlit_embed.html", streamlit_url=streamlit_url)
+
+    # return render_template("streamlit_embed.html")  # Load page with iframe
+
 
 # @app.route('/register', methods=['POST', 'GET'])
 # def register():

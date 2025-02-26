@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (response.ok) {
                 alert("Login Successful!");
-                window.location.href = "/dashboard"; // Redirect to the dashboard
+                window.location.href = "/open-streamlit"; // Redirect to the chatbot
             } else {
                 alert(result.error || "Login failed, please try again.");
             }

@@ -55,14 +55,16 @@ def checkLoginCredentials(email, password):
         params = connection()
         with psycopg2.connect(**params) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                query = "SELECT password_hash FROM users WHERE email = %s"
+                query = "SELECT password_hash, id, firstname FROM users WHERE email = %s"
                 cur.execute(query, (email,))
                 user = cur.fetchone()
 
                 if user:
                     stored_hash = user['password_hash']
+                    id = user['id']
+                    firstname = user["firstname"]
                     if bcrypt.check_password_hash(stored_hash, password):
-                        return jsonify({"success": "Login successful"}), 200
+                        return jsonify({"success": "Login successful", "id": id, "firstname": firstname }), 200
                     else:
                         return jsonify({"error": "Incorrect password"}), 401
                 else:
