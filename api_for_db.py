@@ -38,6 +38,12 @@ def signin():
 
     # Check credentials using database function
     response_data = dbc.checkLoginCredentials(email, password)
+    if response_data[1] == 200:
+        data = response_data[0].get_json()
+        print(type(data))
+        print(data)
+
+    # firstname
 
     return response_data  # Return JSON response directly
 

@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 from streamlit_chat import message
 from langchain.prompts import PromptTemplate
@@ -9,6 +10,21 @@ from langchain.schema.runnable import RunnableSequence
 from PyPDF2 import PdfReader
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# # Flask API URL
+# flask_api = "http://127.0.0.1:5001/get-username"
+
+# # Get session data from Flask
+# response = requests.get(flask_api)
+# data = response.json()
+# user = data.get("username", "Guest")
+
+
+query_params = st.query_params
+# st.warning(query_params)
+user = query_params.get("user", "Guest")  # Default to "Guest" if not found
+# st.warning(user)
+
 
 # Load and parse the JSON file
 def load_json_data(file_path):
@@ -132,7 +148,7 @@ def get_pdf_relevant_examples(query, max_length=2000):
     chunks_with_scores.sort(key=lambda x: x[1], reverse=True)
 
     for chunk, _ in chunks_with_scores:
-        example = f"Excerpt: {chunk}\n\n"
+        example = f"Except: {chunk}\n\n"
         example_length = len(example)
 
         # Check if adding the example exceeds the maximum length
@@ -149,7 +165,7 @@ def initialize_session_state():
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ["Hello! I'm here to support your mental health journey. 😊"]
+        st.session_state['generated'] = [f"Hello {user}! I'm here to support your mental health journey. 😊"]
 
     if 'past' not in st.session_state:
         st.session_state['past'] = ["Hey! 👋"]
