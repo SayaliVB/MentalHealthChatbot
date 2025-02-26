@@ -8,6 +8,7 @@ import json
 from sentence_transformers import SentenceTransformer, util
 from langchain.schema.runnable import RunnableSequence
 from PyPDF2 import PdfReader
+from web_search import fetch_web_results
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -184,14 +185,23 @@ def conversation_chat(question):
     limited_examples = get_relevant_examples(question, max_length=50)
     pdf_examples = get_pdf_relevant_examples(question, max_length=50)
     history = format_history()
+    
+    if not limited_examples and not pdf_examples:
+        web_info = fetch_web_results(question)  # Call web search function if no relevant data
+    else:
+        web_info = ""
+    
     response = llm_chain.invoke({
         "examples": limited_examples,
         "culture": pdf_examples,
         "history": history,
-        "question": question
+        "question": question,
+        "web_info": web_info
     })
+    
     if hasattr(response, 'content'):
         response = response.content
+    
     st.session_state['history'].append((question, response))
     return response
 
