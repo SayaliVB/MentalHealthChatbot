@@ -87,7 +87,8 @@ def open_streamlit():
     if session.get('username'):
         print(session["username"])
     user = session.get("username", "Guest")  # Get session variable
-    streamlit_url = f"http://localhost:8501?user={user}"  # Pass session data
+    userid = session.get("userid", 0)  # Get session variable
+    streamlit_url = f"http://localhost:8501?user={user}&userid={userid}"  # Pass session data
     return render_template("streamlit_embed.html", streamlit_url=streamlit_url)
 
     # return render_template("streamlit_embed.html")  # Load page with iframe

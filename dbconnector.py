@@ -45,9 +45,6 @@ def registeruser(firstname, lastname, email, password):
 
     return jsonify(data)
 
-from flask_bcrypt import Bcrypt
-bcrypt = Bcrypt()
-
 def checkLoginCredentials(email, password):
     """Verifies login credentials using Flask-Bcrypt."""
     conn = None
@@ -76,6 +73,40 @@ def checkLoginCredentials(email, password):
     finally:
         if conn:
             conn.close()
+
+
+def getChatSummary(userid):
+    try:
+        with psycopg2.connect(**params) as conn:
+            cur = conn.cursor()
+
+            # Check if email already exists
+            cur.execute("SELECT session_summary FROM chat_sessions WHERE user_id = %s ORDER BY timestamp DESC LIMIT 1", (userid,))
+            summary = cur.fetchone()
+            if summary:
+                return jsonify({"success": "Chat summary found", "session_summary": summary[0] }), 200
+            else:
+                return jsonify({"error": "No previous chat summary"}), 404
+
+    except Exception as error:
+        print("Error in get session summary:", error)
+        return jsonify({"error": "Database error", "error_details": str(error)}), 500
+
+def storeChatSummary(userid, summary):
+    try:
+        with psycopg2.connect(**params) as conn:
+            cur = conn.cursor()
+
+            # Check if email already exists
+            cur.execute("INSERT INTO chat_sessions (user_id, session_summary) VALUES (%s, %s)", (userid,summary))
+            conn.commit()
+
+            return jsonify({"success": "Chat summary stored successfully" }), 200
+            
+
+    except Exception as error:
+        print("Error in get session summary:", error)
+        return jsonify({"error": "Database error", "error_details": str(error)}), 500
 
 # to register a user 
 # def registeruser(firstname,lastname, email, password):
