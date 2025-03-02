@@ -1,3 +1,5 @@
+from http import client
+import psycopg2
 import requests
 import streamlit as st
 from streamlit_chat import message
@@ -12,18 +14,10 @@ from web_search import fetch_web_results
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# # Flask API URL
-# flask_api = "http://127.0.0.1:5001/get-username"
-
-# # Get session data from Flask
-# response = requests.get(flask_api)
-# data = response.json()
-# user = data.get("username", "Guest")
-
-
 query_params = st.query_params
 # st.warning(query_params)
 user = query_params.get("user", "Guest")  # Default to "Guest" if not found
+user_id = query_params.get("userid", 0)
 # st.warning(user)
 
 
@@ -102,6 +96,62 @@ llm_chain = assistant_prompt_template | llm
 # Streamlit UI
 st.title("Mental Health ChatBot 🤗")
 
+DB_NAME = "chatbotData"
+DB_USER = "postgres"
+DB_PASSWORD = ""
+DB_HOST = "localhost"
+DB_PORT = "5432"
+
+global_ip='127.0.0.1:5000'
+
+# Function to fetch past chat summary
+def fetch_chat_summary(user_id):
+    response = requests.post(f'http://{global_ip}/get_chat_summary', json={"user_id": user_id}, headers={'Content-Type': 'application/json'})
+
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            return data.get("session_summary", None)
+        else:
+            return None
+    else:
+        return None
+
+
+# Function to store chat summary in PostgreSQL
+def store_chat_summary(user_id, messages):
+    summary = summarize_chat(messages)
+
+
+    response = requests.post(f'http://{global_ip}/store_chat_summary', json={"user_id": user_id, "session_summary": summary}, headers={'Content-Type': 'application/json'})
+
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            st.success("✅ Chat summary saved successfully!")
+    else:
+        st.success(" Error in saving chat summary!")
+
+# Function to summarize chat session using GPT
+def summarize_chat(messages):
+    prompt = f"""
+    You are a mental health chatbot that summarizes user conversations in a few sentences. 
+    Focus on the user's emotional state, concerns, and key advice given.
+
+    Chat Transcript:
+    {messages}
+
+    Provide a concise and human-friendly summary:
+    """
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=200,
+        temperature=0.5
+    )
+    return response.choices[0].message.content.strip()
+
+
 def get_relevant_examples(query, max_length=2000):
     examples = []
     total_length = 0
@@ -161,7 +211,7 @@ def get_pdf_relevant_examples(query, max_length=2000):
 
     return "".join(examples)
 
-def initialize_session_state():
+def initialize_session_state(user_id):
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
@@ -169,7 +219,7 @@ def initialize_session_state():
         st.session_state['generated'] = [f"Hello {user}! I'm here to support your mental health journey. 😊"]
 
     if 'past' not in st.session_state:
-        st.session_state['past'] = ["Hey! 👋"]
+        st.session_state["past"] = [fetch_chat_summary(user_id) or "No previous session data."]
 
 
 def format_history():
@@ -229,6 +279,12 @@ def display_chat_history():
                 message(st.session_state["generated"][i], key=str(i), avatar_style="fun-emoji")
 
 # Initialize session state
-initialize_session_state()
+initialize_session_state(user_id)
 # Display chat history
 display_chat_history()
+
+# Save chat summary when user ends session
+if st.button("End Chat Session"):
+    store_chat_summary(user_id, [chat["user"] for chat in st.session_state["history"]])
+    st.session_state["history"] = []  # Clear chat history for new session
+    st.success("📝 Chat session ended. Summary saved!")

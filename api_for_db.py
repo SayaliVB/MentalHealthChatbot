@@ -47,6 +47,48 @@ def signin():
 
     return response_data  # Return JSON response directly
 
+@app.route('/get_chat_summary', methods=['POST'])
+def get_chat_summary():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request format"}), 400
+
+    userid = data.get("user_id")
+
+    if not userid:
+        return jsonify({"error": "User information required"}), 400
+
+    # Check credentials using database function
+    response_data = dbc.getChatSummary(userid)
+    if response_data[1] == 200:
+        data = response_data[0].get_json()
+
+    # firstname
+
+    return response_data  # Return JSON response directly
+
+@app.route('/store_chat_summary', methods=['POST'])
+def store_chat_summary():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request format"}), 400
+
+    userid = data.get("user_id", None)
+    session_summary = data.get("session_summary", None)
+
+    if not userid or not session_summary:
+        return jsonify({"error": "User information and session summary required"}), 400
+
+    # Check credentials using database function
+    response_data = dbc.storeChatSummary(userid, session_summary)
+    if response_data[1] == 200:
+        data = response_data[0].get_json()
+
+    # firstname
+
+    return response_data  # Return JSON response directly
+
+
 # @app.route('/signup', methods=['POST'])
 # def register():
 #     result = request.get_json()
