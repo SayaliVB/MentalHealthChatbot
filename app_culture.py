@@ -10,7 +10,7 @@ import json
 from sentence_transformers import SentenceTransformer, util
 from langchain.schema.runnable import RunnableSequence
 from PyPDF2 import PdfReader
-from web_search import fetch_web_results
+from web_search_beautiful import fetch_info_for
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -73,6 +73,12 @@ Cultural background regrading mental health:
 Here is the conversation history so far:
 {history}
 
+Also, here is some related info about anxiety:
+{anxiety_web_info}
+
+Also, here is some related info about depression:
+{depression_web_info}
+
 Question: {question}
 Provide a concise and supportive answer:
 """
@@ -95,12 +101,6 @@ llm_chain = assistant_prompt_template | llm
 
 # Streamlit UI
 st.title("Mental Health ChatBot 🤗")
-
-DB_NAME = "chatbotData"
-DB_USER = "postgres"
-DB_PASSWORD = ""
-DB_HOST = "localhost"
-DB_PORT = "5432"
 
 global_ip='127.0.0.1:5000'
 
@@ -236,17 +236,22 @@ def conversation_chat(question):
     pdf_examples = get_pdf_relevant_examples(question, max_length=50)
     history = format_history()
     
-    if not limited_examples and not pdf_examples:
-        web_info = fetch_web_results(question)  # Call web search function if no relevant data
-    else:
-        web_info = ""
+    # if not limited_examples and not pdf_examples:
+    anxiety_web_info = fetch_info_for("anxiety")  # Call web search function if no relevant data
+    depression_web_info = fetch_info_for("depression")  # Call web search function if no relevant data
+    # else:
+    #     web_info = ""
     
+    st.warning(anxiety_web_info)
+    st.warning(depression_web_info)
+
     response = llm_chain.invoke({
         "examples": limited_examples,
         "culture": pdf_examples,
         "history": history,
         "question": question,
-        "web_info": web_info
+        "anxiety_web_info": anxiety_web_info,
+        "depression_web_info": depression_web_info  
     })
     
     if hasattr(response, 'content'):

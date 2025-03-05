@@ -9,3 +9,4 @@ langchain
 langchain_openai
 sentence_transformers
 PyPDF2
+bs4

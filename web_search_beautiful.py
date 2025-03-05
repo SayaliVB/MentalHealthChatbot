@@ -31,20 +31,24 @@ def fetch_information(query, sources):
 
 # Example queries and sources
 queries = {
-    "how to manage anxiety": {
+    "anxiety": {
         "Mayo Clinic": "https://www.mayoclinic.org/diseases-conditions/anxiety/symptoms-causes/syc-20350961",
         "WebMD": "https://www.webmd.com/anxiety-panic/guide/anxiety-disorders",
         "Healthline": "https://www.healthline.com/health/anxiety"
     },
-    "best ways to handle depression": {
+    "depression": {
         "Mayo Clinic": "https://www.mayoclinic.org/diseases-conditions/depression/symptoms-causes/syc-20356007",
         "WebMD": "https://www.webmd.com/depression/guide/depression-symptoms-and-types",
         "Healthline": "https://www.healthline.com/health/depression"
     }
 }
 
-for query, sources in queries.items():
+
+def fetch_info_for(query):
     print(f"\nResults for: {query}")
-    results = fetch_information(query, sources)
+    results = fetch_information(query, queries[query])
+    complete_summary = ''
     for site, summary in results.items():
         print(f"\nSite: {site}\nSummary: {summary}")
+        complete_summary += summary
+    return complete_summary
