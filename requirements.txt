@@ -10,3 +10,5 @@ langchain_openai
 sentence_transformers
 PyPDF2
 bs4
+pinecone
+langchain-community

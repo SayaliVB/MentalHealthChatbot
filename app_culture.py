@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer, util
 from langchain.schema.runnable import RunnableSequence
 from PyPDF2 import PdfReader
 from web_search_beautiful import fetch_info_for
+from openai import OpenAI
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -119,8 +120,11 @@ def fetch_chat_summary(user_id):
 
 
 # Function to store chat summary in PostgreSQL
-def store_chat_summary(user_id, messages):
-    summary = summarize_chat(messages)
+def store_chat_summary(user_id, history):
+    # Convert chat history (list of tuples) into readable text format
+    messages = [f"User: {user}\nBot: {bot}" for user, bot in history]  # Formats chat history
+    formatted_conversation = "\n\n".join(messages)  # Joins messages into a single string
+    summary = summarize_chat(formatted_conversation)
 
 
     response = requests.post(f'http://{global_ip}/store_chat_summary', json={"user_id": user_id, "session_summary": summary}, headers={'Content-Type': 'application/json'})
@@ -132,6 +136,9 @@ def store_chat_summary(user_id, messages):
     else:
         st.success(" Error in saving chat summary!")
 
+# Initialize OpenAI client
+client = OpenAI(api_key="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")
+# Function to summarize chat session using GPT
 # Function to summarize chat session using GPT
 def summarize_chat(messages):
     prompt = f"""
@@ -290,6 +297,6 @@ display_chat_history()
 
 # Save chat summary when user ends session
 if st.button("End Chat Session"):
-    store_chat_summary(user_id, [chat["user"] for chat in st.session_state["history"]])
+    store_chat_summary(user_id, st.session_state['history'])
     st.session_state["history"] = []  # Clear chat history for new session
     st.success("📝 Chat session ended. Summary saved!")
