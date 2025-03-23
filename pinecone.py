@@ -1,5 +1,9 @@
 from http import client
+<<<<<<< Updated upstream
 import psycopg2
+=======
+from bs4 import BeautifulSoup
+>>>>>>> Stashed changes
 import requests
 import streamlit as st
 from streamlit_chat import message
@@ -7,13 +11,23 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 import os
 import json
+<<<<<<< Updated upstream
 import pinecone
+=======
+>>>>>>> Stashed changes
 from langchain_community.embeddings import OpenAIEmbeddings
 from PyPDF2 import PdfReader
 from web_search_beautiful import fetch_info_for
 from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
+<<<<<<< Updated upstream
 import time
+=======
+from gtts import gTTS
+import tempfile
+import base64
+
+>>>>>>> Stashed changes
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -31,6 +45,7 @@ PINECONE_INDEX_NAME = "botonlypdfonestwo"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
+<<<<<<< Updated upstream
 
 #  Initialize Pinecone
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -78,10 +93,31 @@ def extract_text_from_pdf(file_path):
     return "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
 
 #  Split PDF Text into Chunks
+=======
+#  Initialize Pinecone
+pc = Pinecone(api_key=PINECONE_API_KEY)
+# === INIT MODELS ===
+embed_model = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API_KEY)
+pc = Pinecone(api_key=PINECONE_API_KEY)
+
+# === INDEX NAMES ===
+PDF_INDEX_NAME = "pdf-index"
+JSON_INDEX_NAME = "json-index"
+WEB_INDEX_NAME = "webdata-index"
+
+# === CREATE INDEXES IF NOT EXISTS ===
+# === Define index names ===
+PDF_INDEX_NAME = "pdf-index"
+JSON_INDEX_NAME = "json-index"
+WEB_INDEX_NAME = "webdata-index"
+
+# === TEXT SPLITTER ===
+>>>>>>> Stashed changes
 def chunk_text(text, chunk_size=500):
     words = text.split()
     return [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
+<<<<<<< Updated upstream
 #  Load and Process PDF
 pdf_path = 'data/Indian_culture.pdf'
 pdf_text = extract_text_from_pdf(pdf_path)
@@ -106,6 +142,153 @@ if PINECONE_INDEX_NAME not in existing_indexes:
         st.success(f"✅ Embeddings successfully stored in index '{PINECONE_INDEX_NAME}'!")
    
 
+=======
+# === LOAD & STORE PDF DATA ===
+
+def extract_text_from_pdf(file_path):
+    reader = PdfReader(file_path)
+    return "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+
+def store_pdf_embeddings(pdf_path):
+    pdf_text = extract_text_from_pdf(pdf_path)
+    pdf_chunks = chunk_text(pdf_text)
+    for i, chunk in enumerate(pdf_chunks):
+        vector = embed_model.embed_query(chunk)
+        pdf_index.upsert([(f"pdf_{i}", vector, {"text": chunk, "source": "pdf"})])
+    
+
+# === LOAD & STORE JSON DATA ===
+def load_json_data(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+def store_json_embeddings(json_path, batch_size=50):
+    data = load_json_data(json_path)
+    vectors = []
+
+    for i, conversation in enumerate(data["Conversations"]):
+        text = conversation["Context"]
+        vector = embed_model.embed_query(text)
+        vectors.append((f"json_{i}", vector, {"text": text, "source": "json"}))
+
+        # Upload in batches
+        if len(vectors) == batch_size:
+            json_index.upsert(vectors)
+            vectors = []
+
+    # Upload any remaining
+    if vectors:
+        json_index.upsert(vectors)
+
+    
+# === SCRAPE & STORE WEB DATA ===
+def scrape_website_text(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    return soup.get_text(separator=' ', strip=True)
+
+def store_web_embeddings(urls):
+    for site_num, url in enumerate(urls):
+        try:
+            text = scrape_website_text(url)
+            chunks = chunk_text(text)
+            for i, chunk in enumerate(chunks):
+                vector = embed_model.embed_query(chunk)
+                web_index.upsert([(f"web_{site_num}_{i}", vector, {"text": chunk, "url": url})])
+            
+        except Exception as e:
+            print(f"❌ Failed to process {url}: {e}")
+
+# === COMBINED RETRIEVAL FUNCTION ===
+def get_relevant_examples(query, max_length=2000, top_k=5):
+    query_embedding = embed_model.embed_query(query)
+
+    # Query all three indexes
+    results_pdf = pdf_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+    results_json = json_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+    results_web = web_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    # Combine and sort
+    combined = results_pdf["matches"] + results_json["matches"] + results_web["matches"]
+    combined.sort(key=lambda x: x["score"], reverse=True)
+
+    examples = []
+    
+    total_length = 0
+
+    for match in combined:
+        chunk_text = match["metadata"]["text"]
+        source = match["metadata"].get("url") or match["metadata"].get("source", "unknown")
+        if total_length + len(chunk_text) > max_length:
+            break
+        examples.append(chunk_text)
+       
+        total_length += len(chunk_text)
+
+    return "\n\n".join(examples)
+
+# === Get all existing indexes from Pinecone ===
+existing_indexes = pc.list_indexes().names()
+
+# === Create and store embeddings only if index doesn't exist ===
+if PDF_INDEX_NAME not in existing_indexes:
+    pc.create_index(
+        name=PDF_INDEX_NAME,
+        dimension=1536,
+        metric="cosine",
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    )
+    pdf_index = pc.Index(PDF_INDEX_NAME)
+    store_pdf_embeddings("data/Indian_culture.pdf")
+else:
+    pdf_index = pc.Index(PDF_INDEX_NAME)
+
+if JSON_INDEX_NAME not in existing_indexes:
+    pc.create_index(
+        name=JSON_INDEX_NAME,
+        dimension=1536,
+        metric="cosine",
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    )
+    json_index = pc.Index(JSON_INDEX_NAME)
+    store_json_embeddings("data/json_dataset.json")
+else:
+    json_index = pc.Index(JSON_INDEX_NAME)
+
+if WEB_INDEX_NAME not in existing_indexes:
+    pc.create_index(
+        name=WEB_INDEX_NAME,
+        dimension=1536,
+        metric="cosine",
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    )
+    web_index = pc.Index(WEB_INDEX_NAME)
+    store_web_embeddings([
+        "https://www.nimh.nih.gov/health/topics/anxiety-disorders",
+        "https://www.verywellmind.com/depression-4157287",
+        "https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response"
+    ])
+else:
+    web_index = pc.Index(WEB_INDEX_NAME)
+################# tts##########################
+def play_tts(text):
+    tts = gTTS(text=text, lang='en')
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+        tts.save(tmp_file.name)
+        audio_path = tmp_file.name
+
+    with open(audio_path, "rb") as f:
+        audio_bytes = f.read()
+        b64 = base64.b64encode(audio_bytes).decode()
+        audio_html = f"""
+        <audio autoplay controls>
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+        </audio>
+        """
+        st.markdown(audio_html, unsafe_allow_html=True)
+
+###############################################
+>>>>>>> Stashed changes
 
 # Prepare the template
 assistant_template = """
@@ -124,11 +307,14 @@ Here are some example conversations:
 Here is the conversation history so far:
 {history}
 
+<<<<<<< Updated upstream
 Also, here is some related info about anxiety:
 {anxiety_web_info}
 
 Also, here is some related info about depression:
 {depression_web_info}
+=======
+>>>>>>> Stashed changes
 
 Question: {question}
 Provide a concise and supportive answer:
@@ -136,7 +322,11 @@ Provide a concise and supportive answer:
 
 # Define the prompt template
 assistant_prompt_template = PromptTemplate(
+<<<<<<< Updated upstream
     input_variables=["examples", "history","anxiety_web_info","depression_web_info", "question"],
+=======
+    input_variables=["examples", "history", "question"],
+>>>>>>> Stashed changes
     template=assistant_template
 )
 
@@ -152,6 +342,11 @@ llm_chain = assistant_prompt_template | llm
 
 # Streamlit UI
 st.title("Mental Health ChatBot 🤗")
+<<<<<<< Updated upstream
+=======
+tts_enabled = st.checkbox("🔊 Enable Text-to-Speech (TTS)", value=True)
+
+>>>>>>> Stashed changes
 
 global_ip='127.0.0.1:5000'
 
@@ -207,6 +402,7 @@ def summarize_chat(messages):
     )
     return response.choices[0].message.content.strip()
 
+<<<<<<< Updated upstream
 
 def get_relevant_examples(query, max_length=2000):
     query_embedding = embed_model.embed_query(query)
@@ -226,6 +422,8 @@ def get_relevant_examples(query, max_length=2000):
 
     return "\n\n".join(examples)
 
+=======
+>>>>>>> Stashed changes
 def initialize_session_state(user_id):
     if 'history' not in st.session_state:
         st.session_state['history'] = []
@@ -235,6 +433,13 @@ def initialize_session_state(user_id):
 
     if 'past' not in st.session_state:
         st.session_state["past"] = [fetch_chat_summary(user_id) or "No previous session data."]
+<<<<<<< Updated upstream
+=======
+    if "last_spoken_index" not in st.session_state:
+        st.session_state["last_spoken_index"] = -1
+
+
+>>>>>>> Stashed changes
 
 
 def format_history():
@@ -261,6 +466,7 @@ def format_history():
         formatted += f"User: {user_message}\nBot: {bot_response}\n\n"
     return formatted.strip()
 
+<<<<<<< Updated upstream
 def conversation_chat(question):
     limited_examples = get_relevant_examples(question, max_length=50)
     # pdf_examples = get_pdf_relevant_examples(question, max_length=50)
@@ -289,6 +495,28 @@ def conversation_chat(question):
     
     st.session_state['history'].append((question, response))
     return response
+=======
+
+def conversation_chat(question):
+    limited_examples = get_relevant_examples(question, max_length=500)
+    history = format_history()
+
+    response = llm_chain.invoke({
+        "examples": limited_examples,
+        "history": history,
+        "question": question,
+        
+    })
+
+    if hasattr(response, 'content'):
+        response = response.content
+
+    st.session_state['history'].append((question, response))
+    
+    return response
+    
+
+>>>>>>> Stashed changes
 
 def display_chat_history():
     reply_container = st.container()
@@ -306,12 +534,25 @@ def display_chat_history():
 
             st.session_state['past'].append(user_input)
             st.session_state['generated'].append(output)
+<<<<<<< Updated upstream
+=======
+            
+>>>>>>> Stashed changes
 
     if st.session_state['generated']:
         with reply_container:
             for i in range(len(st.session_state['generated'])):
+<<<<<<< Updated upstream
                 message(st.session_state["past"][i], is_user=True, key=str(i) + '_user', avatar_style="thumbs")
                 message(st.session_state["generated"][i], key=str(i), avatar_style="fun-emoji")
+=======
+                message(st.session_state["past"][i], is_user=True, key=f"{i}_user", avatar_style="thumbs")
+                message(st.session_state["generated"][i], key=f"{i}", avatar_style="fun-emoji")
+                 # 🔊 Speak the last generated message only once
+                if tts_enabled and i == len(st.session_state['generated']) - 1 and i > st.session_state["last_spoken_index"]:
+                    play_tts(st.session_state["generated"][i])
+                    st.session_state["last_spoken_index"] = i
+>>>>>>> Stashed changes
 
 # Initialize session state
 initialize_session_state(user_id)
