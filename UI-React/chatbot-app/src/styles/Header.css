@@ -1,0 +1,18 @@
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+  }
+  .settings button {
+    background: #333;
+    color: white;
+    padding: 0.5rem 1rem;
+    margin: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  
