@@ -35,12 +35,30 @@ queries = {
         "Mayo Clinic": "https://www.mayoclinic.org/diseases-conditions/anxiety/symptoms-causes/syc-20350961",
         "WebMD": "https://www.webmd.com/anxiety-panic/guide/anxiety-disorders",
         "Healthline": "https://www.healthline.com/health/anxiety"
-    },
+    },    
     "depression": {
         "Mayo Clinic": "https://www.mayoclinic.org/diseases-conditions/depression/symptoms-causes/syc-20356007",
         "WebMD": "https://www.webmd.com/depression/guide/depression-symptoms-and-types",
         "Healthline": "https://www.healthline.com/health/depression"
+    },
+    "stress": {
+    "Mayo Clinic": "https://www.mayoclinic.org/healthy-lifestyle/stress-management",
+    "Healthline": "https://www.healthline.com/health/stress",
+    "WebMD": "https://www.webmd.com/balance/stress-management"
+    },
+    "burnout": {
+        "WHO": "https://www.who.int/mental_health/evidence/burn-out/en/",
+        "VeryWellMind": "https://www.verywellmind.com/stress-and-burnout-4157210"
+    },
+    "ptsd": {
+        "NIMH": "https://www.nimh.nih.gov/health/topics/post-traumatic-stress-disorder-ptsd",
+        "WebMD": "https://www.webmd.com/mental-health/what-is-ptsd"
+    },
+    "exam stress": {
+        "Healthline": "https://www.healthline.com/health/how-to-deal-with-exam-stress",
+        "ReachOut": "https://au.reachout.com/articles/coping-with-exam-stress"
     }
+
 }
 
 
