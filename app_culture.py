@@ -1,3 +1,6 @@
+from http import client
+import psycopg2
+import requests
 import streamlit as st
 from streamlit_chat import message
 from langchain.prompts import PromptTemplate
@@ -7,8 +10,17 @@ import json
 from sentence_transformers import SentenceTransformer, util
 from langchain.schema.runnable import RunnableSequence
 from PyPDF2 import PdfReader
+from web_search_beautiful import fetch_info_for
+from openai import OpenAI
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+query_params = st.query_params
+# st.warning(query_params)
+user = query_params.get("user", "Guest")  # Default to "Guest" if not found
+user_id = query_params.get("userid", 0)
+# st.warning(user)
+
 
 # Load and parse the JSON file
 def load_json_data(file_path):
@@ -62,6 +74,12 @@ Cultural background regrading mental health:
 Here is the conversation history so far:
 {history}
 
+Also, here is some related info about anxiety:
+{anxiety_web_info}
+
+Also, here is some related info about depression:
+{depression_web_info}
+
 Question: {question}
 Provide a concise and supportive answer:
 """
@@ -84,6 +102,62 @@ llm_chain = assistant_prompt_template | llm
 
 # Streamlit UI
 st.title("Mental Health ChatBot 🤗")
+
+global_ip='127.0.0.1:5000'
+
+# Function to fetch past chat summary
+def fetch_chat_summary(user_id):
+    response = requests.post(f'http://{global_ip}/get_chat_summary', json={"user_id": user_id}, headers={'Content-Type': 'application/json'})
+
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            return data.get("session_summary", None)
+        else:
+            return None
+    else:
+        return None
+
+
+# Function to store chat summary in PostgreSQL
+def store_chat_summary(user_id, history):
+    # Convert chat history (list of tuples) into readable text format
+    messages = [f"User: {user}\nBot: {bot}" for user, bot in history]  # Formats chat history
+    formatted_conversation = "\n\n".join(messages)  # Joins messages into a single string
+    summary = summarize_chat(formatted_conversation)
+
+
+    response = requests.post(f'http://{global_ip}/store_chat_summary', json={"user_id": user_id, "session_summary": summary}, headers={'Content-Type': 'application/json'})
+
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            st.success("✅ Chat summary saved successfully!")
+    else:
+        st.success(" Error in saving chat summary!")
+
+# Initialize OpenAI client
+client = OpenAI(api_key="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")
+# Function to summarize chat session using GPT
+# Function to summarize chat session using GPT
+def summarize_chat(messages):
+    prompt = f"""
+    You are a mental health chatbot that summarizes user conversations in a few sentences. 
+    Focus on the user's emotional state, concerns, and key advice given.
+
+    Chat Transcript:
+    {messages}
+
+    Provide a concise and human-friendly summary:
+    """
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=200,
+        temperature=0.5
+    )
+    return response.choices[0].message.content.strip()
+
 
 def get_relevant_examples(query, max_length=2000):
     examples = []
@@ -132,7 +206,7 @@ def get_pdf_relevant_examples(query, max_length=2000):
     chunks_with_scores.sort(key=lambda x: x[1], reverse=True)
 
     for chunk, _ in chunks_with_scores:
-        example = f"Excerpt: {chunk}\n\n"
+        example = f"Except: {chunk}\n\n"
         example_length = len(example)
 
         # Check if adding the example exceeds the maximum length
@@ -144,15 +218,15 @@ def get_pdf_relevant_examples(query, max_length=2000):
 
     return "".join(examples)
 
-def initialize_session_state():
+def initialize_session_state(user_id):
     if 'history' not in st.session_state:
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ["Hello! I'm here to support your mental health journey. 😊"]
+        st.session_state['generated'] = [f"Hello {user}! I'm here to support your mental health journey. 😊"]
 
     if 'past' not in st.session_state:
-        st.session_state['past'] = ["Hey! 👋"]
+        st.session_state["past"] = [fetch_chat_summary(user_id) or "No previous session data."]
 
 
 def format_history():
@@ -168,14 +242,28 @@ def conversation_chat(question):
     limited_examples = get_relevant_examples(question, max_length=50)
     pdf_examples = get_pdf_relevant_examples(question, max_length=50)
     history = format_history()
+    
+    # if not limited_examples and not pdf_examples:
+    anxiety_web_info = fetch_info_for("anxiety")  # Call web search function if no relevant data
+    depression_web_info = fetch_info_for("depression")  # Call web search function if no relevant data
+    # else:
+    #     web_info = ""
+    
+    st.warning(anxiety_web_info)
+    st.warning(depression_web_info)
+
     response = llm_chain.invoke({
         "examples": limited_examples,
         "culture": pdf_examples,
         "history": history,
-        "question": question
+        "question": question,
+        "anxiety_web_info": anxiety_web_info,
+        "depression_web_info": depression_web_info  
     })
+    
     if hasattr(response, 'content'):
         response = response.content
+    
     st.session_state['history'].append((question, response))
     return response
 
@@ -203,6 +291,12 @@ def display_chat_history():
                 message(st.session_state["generated"][i], key=str(i), avatar_style="fun-emoji")
 
 # Initialize session state
-initialize_session_state()
+initialize_session_state(user_id)
 # Display chat history
 display_chat_history()
+
+# Save chat summary when user ends session
+if st.button("End Chat Session"):
+    store_chat_summary(user_id, st.session_state['history'])
+    st.session_state["history"] = []  # Clear chat history for new session
+    st.success("📝 Chat session ended. Summary saved!")

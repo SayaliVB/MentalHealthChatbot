@@ -13,3 +13,15 @@ PyPDF2
 openai
 python-dotenv
 
+requests
+streamlit
+streamlit_chat
+langchain
+langchain_openai
+sentence_transformers
+PyPDF2
+bs4
+pinecone
+langchain-community
+gTTS
+transformers

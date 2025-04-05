@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Empower Mental Health</title>
-    <link rel="stylesheet" href="../static/css/login.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
     <div class="login-container">
         <div class="logo">
-            <img src="../static/images/logo.png" alt="Empower Mental Health Logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Empower Mental Health Logo">
         </div>
         <h2>Empower Mental Health</h2>
         <form action="#" method="POST">
@@ -28,10 +28,11 @@
             <div class="divider">Or continue with</div>
             
             <button class="google-btn">
-                <img src="../static/images/google.png" alt="Google Logo">
+                <img src="{{ url_for('static', filename='images/google.png') }}" alt="Google Logo">
                 Login with Google
             </button>
         </form>
     </div>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
