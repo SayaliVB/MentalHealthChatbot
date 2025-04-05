@@ -2,3 +2,14 @@ flask
 psycopg2-binary
 flask-cors
 flask_bcrypt
+streamlit
+streamlit-chat
+langchain
+langchain-openai
+faiss-cpu
+numpy
+sentence-transformers
+PyPDF2
+openai
+python-dotenv
+
