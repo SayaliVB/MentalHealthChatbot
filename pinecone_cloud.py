@@ -15,6 +15,11 @@ from pinecone import Pinecone, ServerlessSpec
 from gtts import gTTS
 import tempfile
 import base64
+# === crisis detection #===
+from transformers import pipeline
+
+# === Load suicidal-bert classifier ===
+crisis_classifier = pipeline("text-classification", model="gohjiayi/suicidal-bert")
 
 # === Setup ===
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -135,6 +140,70 @@ def play_tts(text):
         st.markdown(audio_html, unsafe_allow_html=True)
 
 ###############################################
+# ======= CRISIS DETECTION =========== #
+def gpt_crisis_check(user_input: str) -> bool:
+    prompt = f"""
+    You are a safety classifier. Determine if this message indicates that the user may be in crisis or having suicidal thoughts.
+
+    Message: "{user_input}"
+
+    Answer "Yes" if it's suicidal, otherwise "No".
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+
+    answer = response.choices[0].message.content.strip().lower()
+    return "yes" in answer
+
+def is_crisis(user_input: str, threshold: float = 0.5) -> bool:
+    # 1. Classifier
+    result = crisis_classifier(user_input)[0]
+    label = result['label']
+    score = result['score']
+
+    # 2. Keyword override
+    suicide_keywords = [
+        "end my life", "kill myself", "no reason to live", "want to die",
+        "suicidal", "give up", "commit suicide", "i'm done with everything"
+    ]
+    keyword_match = any(kw in user_input.lower() for kw in suicide_keywords)
+
+    # 3. GPT fallback
+    gpt_thinks_crisis = gpt_crisis_check(user_input)
+
+    # Final result
+    crisis = (label == 'LABEL_1' and score >= threshold) or keyword_match or gpt_thinks_crisis
+
+    # Debug logging
+    st.sidebar.markdown(f"**[DEBUG] Suicidal BERT:** `{label}` with score `{score:.2f}`")
+    st.sidebar.markdown(f"**[DEBUG] Keywords triggered:** `{keyword_match}`")
+    st.sidebar.markdown(f"**[DEBUG] GPT says crisis:** `{gpt_thinks_crisis}`")
+    st.sidebar.markdown(f"**[DEBUG] FINAL DECISION:** `{crisis}`")
+    return crisis
+
+# === Predefined safe response ===
+def crisis_tool_response():
+    return (
+        "Crisis detected "
+        "Please reach out to a mental health professional or call a crisis helpline in your area. "
+        "You're valuable and deserve support. "
+    )
+
+# === Main decision function for handling messages ===
+def agent_or_crisis_chat(user_input):
+    if is_crisis(user_input):
+        response = crisis_tool_response()
+        print(response)
+    else:
+        response = conversation_chat(user_input)  # This is your original LangChain or LLM-based function
+    st.session_state['history'].append((user_input, response))
+    return response
+
 
 # Prepare the template
 assistant_template = """
@@ -195,6 +264,7 @@ def store_chat_summary(user_id, history):
             st.success("✅ Chat summary saved successfully!")
     else:
         st.success(" Error in saving chat summary!")
+
 
 # Initialize OpenAI client
 client = OpenAI(api_key="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")
@@ -263,7 +333,7 @@ def display_chat_history():
             user_input = st.text_input("Question:", placeholder="Ask about your mental health", key='input')
             submit_button = st.form_submit_button(label='Send')
         if submit_button and user_input:
-            output = conversation_chat(user_input)
+            output = agent_or_crisis_chat(user_input)
             if not isinstance(output, str):
                 output = str(output)
             st.session_state['past'].append(user_input)
