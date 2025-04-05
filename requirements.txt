@@ -13,3 +13,4 @@ bs4
 pinecone
 langchain-community
 gTTS
+transformers
