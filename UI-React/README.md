@@ -6,10 +6,10 @@
 
 ## Frontend Setup (React + Vite)
 1-Navigate to frontend:
-  cd chatbot-app
+ - cd chatbot-app
 
 2-Install Node modules:
-  npm install
+ - npm install
 
 3-Create a .env file in chatbot-app
 
@@ -19,7 +19,7 @@
    - Visit: https://console.cloud.google.com/
    - Need  Maps JavaScript API + Places API + Geolocation API
 
-4-Run the frontend server
-   npm run dev
+4-Run the frontend server:
+  - npm run dev
 
 Frontend runs on: http://localhost:5173
