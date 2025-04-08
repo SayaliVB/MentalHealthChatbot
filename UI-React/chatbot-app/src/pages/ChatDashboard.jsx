@@ -4,23 +4,40 @@ import Header from '../components/Header';
 import ChatArea from '../components/ChatArea';
 import CrisisButton from '../components/CrisisButton';
 import SettingsModal from '../components/SettingsModal';
+import MapModal from '../components/MapModal'; // New modal for doctors
 import '../styles/ChatDashboard.css';
 
 const ChatDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [userLocation, setUserLocation] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: SF
   const [userName, setUserName] = useState('');
 
+  // Get user name and location on mount
   useEffect(() => {
     const storedName = localStorage.getItem('username');
     if (storedName) setUserName(storedName);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => console.warn("Geolocation not available or denied.")
+    );
   }, []);
 
   const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+  const handleShowImmediateHelp = () => setShowMapModal(true);
+  const handleCloseMapModal = () => setShowMapModal(false);
 
   return (
     <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
-      <Sidebar />
+      <Sidebar userName={userName} />
+
       <div className="main-content">
         <Header userName={userName} onOpenSettings={() => setIsModalOpen(true)} />
 
@@ -33,8 +50,15 @@ const ChatDashboard = () => {
           />
         )}
 
-        <ChatArea />
-        <CrisisButton />
+        <ChatArea userName={userName} />
+
+        {/* Immediate Help button */}
+        <CrisisButton onClick={handleShowImmediateHelp} />
+
+        {/* Modal for Google Map and Helplines */}
+        {showMapModal && (
+          <MapModal onClose={handleCloseMapModal} userLocation={userLocation} />
+        )}
       </div>
     </div>
   );

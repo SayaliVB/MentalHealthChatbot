@@ -1,24 +1,29 @@
 import React from 'react';
+import '../styles/Sidebar.css';
 
-const Sidebar = () => {
-  // Dummy chat history list
-  const chatHistory = [
-    { id: 1, title: 'Chat with Dr. Smith' },
-    { id: 2, title: 'Session 2: Coping Strategies' },
-    { id: 3, title: 'Group Support Chat' },
-  ];
-
+const Sidebar = ({ userName = 'User' }) => {
   return (
-    <aside className="sidebar">
-      <button className="new-chat-button">+ New Chat</button>
-      <h3>Chat History</h3>
-      <ul>
-        {chatHistory.map((chat) => (
-          <li key={chat.id}>{chat.title}</li>
-        ))}
-      </ul>
-    </aside>
+    <div className="sidebar">
+      <div className="sidebar-content">
+        <div className="profile">
+          <img src="https://cdn-icons-png.flaticon.com/512/2206/2206368.png" alt="User Icon" />
+          <p><strong>Welcome, {userName}</strong></p>
+          <p>(Mental Wellness Seeker)</p>
+        </div>
+
+        <div className="chat-history">
+          <div>💬 New Chat</div>
+          <div>📈 Analytics Dashboard</div>
+          <div>👤 Profile Management</div>
+          <div>📍 Therapist Locator</div>
+        </div>
+      </div>
+
+      <div className="sidebar-footer">
+        <button className="logout-btn">🔓 Logout</button>
+      </div>
+    </div>
   );
-}  
+};
 
 export default Sidebar;

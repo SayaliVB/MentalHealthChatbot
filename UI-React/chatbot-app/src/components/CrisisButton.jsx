@@ -1,15 +1,10 @@
 import React from 'react';
 
-const CrisisButton = () => {
-  const handleCrisisConnect = () => {
-    // This would be the logic to connect to real-time crisis management helper
-    alert('Connecting to crisis management support...');
-  };
-
+const CrisisButton = ({ onClick }) => {
   return (
     <div className="crisis-button-container">
-      <button onClick={handleCrisisConnect} className="crisis-button">
-        Need Immediate Help?
+      <button onClick={onClick} className="crisis-button">
+        🆘 Immediate Help
       </button>
     </div>
   );

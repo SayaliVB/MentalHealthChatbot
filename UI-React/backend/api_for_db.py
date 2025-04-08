@@ -3,8 +3,15 @@ from chatbot_logic import get_bot_response
 from flask import Flask, request, jsonify
 import dbconnector as dbc
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
+import requests
+
+load_dotenv()
+VITE_GOOGLE_MAPS_API_KEY= os.getenv("VITE_GOOGLE_MAPS_API_KEY")
 
 app = Flask(__name__)
+
 CORS(app)
 @app.route('/signup', methods=['POST'])
 def register():
@@ -52,6 +59,38 @@ def chat():
         return jsonify({"success": True, "response": response})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+
+
+
+@app.route("/api/nearby-doctors")
+def get_nearby_doctors():
+    lat = request.args.get("lat")
+    lng = request.args.get("lng")
+
+    api_key = os.getenv("VITE_GOOGLE_MAPS_API_KEY")
+    print("Backend loaded API key:", api_key)
+
+    if not api_key:
+        return jsonify({"error": "Missing Google API Key"}), 500
+
+    url = (
+    f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
+    f"location={lat},{lng}&radius=8000&type=health&keyword=hospital|doctor|clinic&key={api_key}"
+)
+
+    print("Requesting:", url)
+
+    try:
+        res = requests.get(url)
+        print("Places API Response:", res.json())
+        return jsonify(res.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 
 
 if __name__ == '__main__':

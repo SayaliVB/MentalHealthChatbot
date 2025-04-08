@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
-import SettingsModal from './SettingsModal';
-import '../styles/Header.css'
+import React from 'react';
+import '../styles/Header.css';
 
-const Header = ({ userName, onOpenSettings }) => {
-    return (
-      <header className="dashboard-header">
-        <div className="profile-info">
-          <span>Welcome, {userName || "Guest"}</span>
-        </div>
-        <div className="settings">
-          <button onClick={onOpenSettings}>Settings</button>
-        </div>
-      </header>
-    );
-  };
-  
-  export default Header;
-  
+const Header = ({ isTTS, toggleTTS }) => {
+  return (
+    <header className="header">
+      <div>🧠 Mental Health ChatBot – Your AI Support Companion</div>
+      <div className="tts-toggle">
+        <label htmlFor="ttsToggle">🔊 TTS</label>
+        <input
+          type="checkbox"
+          id="ttsToggle"
+          checked={isTTS}
+          onChange={toggleTTS}
+        />
+      </div>
+    </header>
+  );
+};
+
+export default Header;

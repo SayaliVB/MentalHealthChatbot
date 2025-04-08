@@ -1,63 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
+import '../styles/ChatArea.css';
 
-const ChatArea = () => {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-
-  const handleSend = async () => {
-    if (input.trim()) {
-      const newMessage = { id: Date.now(), text: input, sender: 'user' };
-      setMessages((prev) => [...prev, newMessage]);
-      setInput('');
-  
-      try {
-        const response = await fetch("http://localhost:5000/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question: input,
-            history: messages.map(msg => `${msg.sender === 'user' ? 'User' : 'Bot'}: ${msg.text}`).join("\n")
-          }),
-        });
-  
-        const data = await response.json();
-        const aiResponse = {
-          id: Date.now() + 1,
-          text: data.response || "Sorry, I didn't get that.",
-          sender: 'ai',
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-      } catch (error) {
-        console.error("Error fetching response:", error);
-        const errorMessage = {
-          id: Date.now() + 1,
-          text: "Error connecting to the chatbot.",
-          sender: 'ai',
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-      }
-    }
-  };
-  
-
+const ChatArea = ({ userName = "User" }) => {
   return (
     <div className="chat-area">
-      <div className="messages">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`message ${msg.sender}`}>
-            {msg.text}
-          </div>
-        ))}
+      {/* Summary Box */}
+      <div className="summary-card">
+        The user expressed feelings of loneliness... (summary here)
       </div>
-      <div className="input-area">
+
+      {/* Bot Welcome Message */}
+      <div className="chat-message bot">
+      <img
+          src="https://cdn-icons-png.flaticon.com/128/9193/9193824.png"
+          alt="Bot Avatar"
+          className="chat-avatar"
+       />
+
+        <div className="chat-bubble">
+          Hello {userName}! I'm here to support your mental health journey. 😊
+        </div>
+      </div>
+
+      {/* Input Form */}
+      <div className="chat-input-container">
         <input
           type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your question..."
+          className="chat-input"
+          placeholder="Ask about your mental health..."
         />
-        <button onClick={handleSend}>Send</button>
+        <button className="send-button">Send</button>
       </div>
+
     </div>
   );
 };
