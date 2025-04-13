@@ -143,11 +143,12 @@ def play_tts(text):
 # ======= CRISIS DETECTION =========== #
 def gpt_crisis_check(user_input: str) -> bool:
     prompt = f"""
-    You are a safety classifier. Determine if this message indicates that the user may be in crisis or having suicidal thoughts.
+    You are a safety classifier. Determine if this message indicates that the user may be in crisis, having suicidal thoughts, or expressing harmful or violent intent toward others. 
+    Consider if the user expresses any intent to harm others or themselves in any form, including but not limited to violence, aggression, or threats.
 
     Message: "{user_input}"
 
-    Answer "Yes" if it's suicidal, otherwise "No".
+    Answer "Yes" if it indicates suicidal thoughts, aggression, harm toward others, or harmful intent, otherwise answer "No".
     """
 
     response = client.chat.completions.create(
@@ -159,6 +160,7 @@ def gpt_crisis_check(user_input: str) -> bool:
 
     answer = response.choices[0].message.content.strip().lower()
     return "yes" in answer
+
 
 def is_crisis(user_input: str, threshold: float = 0.5) -> bool:
     # 1. Classifier
