@@ -9,12 +9,14 @@ import os
 import json
 from langchain_community.embeddings import OpenAIEmbeddings
 from PyPDF2 import PdfReader
-from web_search_beautiful import fetch_info_for
+from web_search_beautiful import web_search
 from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
 from gtts import gTTS
 import tempfile
 import base64
+from agents.router_agent import get_router_agent
+
 # === crisis detection #===
 from transformers import pipeline
 
@@ -102,27 +104,31 @@ def store_web_embeddings(urls):
             print(f"❌ Failed to process {url}: {e}")
 
 # === COMBINED RETRIEVAL FUNCTION ===
-def get_relevant_examples(query, max_length=2000, top_k=5):
-    query_embedding = embed_model.embed_query(query)
-    # Query all three indexes
-    results_pdf = pdf_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
-    results_json = json_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
-    results_web = web_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
-    # Combine and sort
-    combined = results_pdf["matches"] + results_json["matches"] + results_web["matches"]
-    combined.sort(key=lambda x: x["score"], reverse=True)
-    examples = []    
-    total_length = 0
-    for match in combined:
-        chunk_text = match["metadata"]["text"]
-        source = match["metadata"].get("url") or match["metadata"].get("source", "unknown")
-        if total_length + len(chunk_text) > max_length:
-            break
-        examples.append(chunk_text)       
-        total_length += len(chunk_text)
-    return "\n\n".join(examples)
-    
-################# tts##########################
+# def get_relevant_examples(query, max_length=2000, top_k=5):
+#     query_embedding = embed_model.embed_query(query)
+#     # Query all three indexes
+#     results_pdf = pdf_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+#     results_json = json_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+#     results_web = web_index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+#     # Combine and sort
+#     combined = results_pdf["matches"] + results_json["matches"] + results_web["matches"]
+#     combined.sort(key=lambda x: x["score"], reverse=True)
+#     examples = []    
+#     total_length = 0
+#     for match in combined:
+#         chunk_text = match["metadata"]["text"]
+#         source = match["metadata"].get("url") or match["metadata"].get("source", "unknown")
+#         if total_length + len(chunk_text) > max_length:
+#             break
+#         examples.append(chunk_text)       
+#         total_length += len(chunk_text)
+#     return "\n\n".join(examples)
+
+# ################# pincecone_search ##########################
+# def pinecone_search(query: str) -> str:
+#     return get_relevant_examples(query)
+
+################# tts ##########################
 def play_tts(text):
     tts = gTTS(text=text, lang='en')
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
@@ -314,18 +320,21 @@ def format_history():
         formatted += f"User: {user_message}\nBot: {bot_response}\n\n"
     return formatted.strip()
     """
-def conversation_chat(question):
-    limited_examples = get_relevant_examples(question, max_length=500)
-    history = format_history()
-    response = llm_chain.invoke({
-        "examples": limited_examples,
-        "history": history,
-        "question": question        
-    })
-    if hasattr(response, 'content'):
-        response = response.content
-    st.session_state['history'].append((question, response))    
-    return response   
+def conversation_chat(user_input: str) -> str:
+    try:
+        response = router_agent.run(user_input)
+        print("conversation_chat", response)
+        if hasattr(response, 'content'):  # just in case (usually not needed)
+            response = response.content
+
+        # Track chat history in session
+        st.session_state['history'].append((user_input, response))
+        return response
+
+    except Exception as e:
+        error_msg = f"⚠️ Sorry, something went wrong: {str(e)}"
+        st.session_state['history'].append((user_input, error_msg))
+        return error_msg 
 
 def display_chat_history():
     reply_container = st.container()
@@ -397,6 +406,13 @@ if WEB_INDEX_NAME not in existing_indexes:
     ])
 else:
     web_index = pc.Index(WEB_INDEX_NAME)
+
+router_agent = get_router_agent(
+    embed_model=embed_model,
+    pdf_index=pdf_index,
+    json_index=json_index,
+    web_index=web_index
+)
 
 # Initialize session state
 initialize_session_state(user_id)
