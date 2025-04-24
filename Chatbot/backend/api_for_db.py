@@ -1,0 +1,161 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import dbconnector as dbc
+from chatbot_logic import create_chat_summary, get_bot_response  # <-- your main bot logic
+import os
+app = Flask(__name__)
+CORS(app)
+
+# === Signup Route ===
+@app.route('/signup', methods=['POST'])
+def register():
+    try:
+        result = request.get_json()
+        firstname = result.get('firstname')
+        lastname = result.get('lastname')
+        email = result.get('email')
+        password = result.get('password')
+
+        if not firstname or not lastname or not email or not password:
+            return jsonify({"success": False, "message": "All fields are required."}), 400
+
+        response = dbc.registeruser(firstname, lastname, email, password)
+        return response
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Signup failed", "error": str(e)}), 500
+
+
+# === Login Route ===
+@app.route("/verify_login", methods=["POST"])
+def signin():
+    try:
+        requestdata = request.get_json()
+        email = requestdata.get("email")
+        password = requestdata.get("password")
+
+        if not email or not password:
+            return jsonify({"success": False, "message": "Email and password are required"}), 400
+
+        # response = dbc.checkLoginCredentials(email, password)
+        # response_json = response[0].get_json()
+        # if response[1] != 200:
+        #     return jsonify(response_json), response[1]
+
+        # return jsonify({
+        #     "success": True,
+        #     "user": response_json
+        # }), 200
+        response = dbc.checkLoginCredentials(email, password)
+        response_json = response.get_json()
+
+        # Error format check
+        if "error" in response_json:
+            return jsonify(response_json), 401
+
+        # Success
+        return jsonify({
+            "success": True,
+            "user": response_json.get("user")
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": "Login failed", "error": str(e)}), 500
+    
+@app.route('/get_chat_summary', methods=['POST'])
+def get_chat_summary():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request format"}), 400
+
+    userid = data.get("user_id")
+
+    if not userid:
+        return jsonify({"error": "User information required"}), 400
+
+    # Check credentials using database function
+    response_data = dbc.getChatSummary(userid)
+    if response_data[1] == 200:
+        data = response_data[0].get_json()
+
+    # firstname
+
+    return response_data  # Return JSON response directly
+
+@app.route('/store_chat_summary', methods=['POST'])
+def store_chat_summary():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid request format"}), 400
+
+    userid = data.get("userid", None)
+    print("In session summary route")
+    chat_history = data.get("chatHistory", None)
+    session_summary = create_chat_summary(chat_history)
+    print("Session summary:", session_summary)
+
+    if not userid or not session_summary:
+        return jsonify({"error": "User information and session summary required"}), 400
+
+    # Check credentials using database function
+    response_data = dbc.storeChatSummary(userid, session_summary)
+    if response_data[1] == 200:
+        data = response_data[0].get_json()
+
+    # firstname
+
+    return response_data  # Return JSON response directly
+
+
+@app.route("/api/nearby-doctors")
+def get_nearby_doctors():
+    lat = request.args.get("lat")
+    lng = request.args.get("lng")
+
+    api_key = os.getenv("VITE_GOOGLE_MAPS_API_KEY")
+    print("Backend loaded API key:", api_key)
+
+    if not api_key:
+        return jsonify({"error": "Missing Google API Key"}), 500
+
+    url = (
+    f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
+    f"location={lat},{lng}&radius=8000&type=health&keyword=hospital|doctor|clinic&key={api_key}"
+)
+
+    print("Requesting:", url)
+
+    try:
+        res = requests.get(url)
+        print("Places API Response:", res.json())
+        return jsonify(res.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+# === Chat Route ===
+@app.route("/chat", methods=["POST"])
+def chat():
+    try:
+        data = request.get_json()
+        user_input = data.get("question", "")
+        history = data.get("history", "")
+
+        if not user_input:
+            return jsonify({"success": False, "message": "Question is required."}), 400
+
+        response = get_bot_response(user_input, history)
+        return jsonify({"success": True, "response": response})
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Chat failed", "error": str(e)}), 500
+
+
+# === Optional: Health Check ===
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "OK"}), 200
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=5000)
