@@ -1,0 +1,26 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 290px;
+  right: 0;
+  height: 60px;
+  background-color: #0B2B5B;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tts-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tts-toggle input {
+  width: 18px;
+  height: 18px;
+}
