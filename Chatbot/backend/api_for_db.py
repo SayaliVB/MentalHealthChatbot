@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import dbconnector as dbc
-from chatbot_logic import create_chat_summary, get_bot_response  # <-- your main bot logic
+from chatbot_logic import create_chat_summary, crisis_tool_response, get_bot_response  # <-- your main bot logic
 import os
 app = Flask(__name__)
 CORS(app)
@@ -94,6 +94,8 @@ def store_chat_summary():
     chat_history = data.get("chatHistory", None)
     session_summary = create_chat_summary(chat_history)
     print("Session summary:", session_summary)
+    crisis_events = data.get("crisisEvents", [])
+    print("Crisis Events:", crisis_events)
 
     if not userid or not session_summary:
         return jsonify({"error": "User information and session summary required"}), 400
@@ -101,7 +103,13 @@ def store_chat_summary():
     # Check credentials using database function
     response_data = dbc.storeChatSummary(userid, session_summary)
     if response_data[1] == 200:
-        data = response_data[0].get_json()
+        # data = response_data[0].get_json()
+        response_json = response_data[0].get_json()
+        session_id = response_json.get("session_id")
+
+        print("✅ Session ID fetched:", session_id)
+        if crisis_events and session_id:
+            dbc.storeCrisisEvents(userid, session_id, crisis_events)
 
     # firstname
 
@@ -147,7 +155,11 @@ def chat():
             return jsonify({"success": False, "message": "Question is required."}), 400
 
         response = get_bot_response(user_input, history)
-        return jsonify({"success": True, "response": response})
+        # crisis detection
+        is_crisis_triggered = (response == crisis_tool_response())
+
+        return jsonify({"success": True,"response": response,"isCrisis": is_crisis_triggered})
+        # return jsonify({"success": True, "response": response})
 
     except Exception as e:
         return jsonify({"success": False, "message": "Chat failed", "error": str(e)}), 500

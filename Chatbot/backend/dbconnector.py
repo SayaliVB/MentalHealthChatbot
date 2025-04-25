@@ -1,4 +1,3 @@
-
 from connection import connection
 import psycopg2
 import psycopg2.extras
@@ -118,12 +117,39 @@ def storeChatSummary(userid, summary):
             cur = conn.cursor()
 
             # Check if email already exists
-            cur.execute("INSERT INTO chat_sessions (user_id, session_summary) VALUES (%s, %s)", (userid,summary))
+            cur.execute("INSERT INTO chat_sessions (user_id, session_summary) VALUES (%s, %s) RETURNING id", (userid,summary))
+            session_id = cur.fetchone()[0]
             conn.commit()
 
-            return jsonify({"success": "Chat summary stored successfully" }), 200
+            return jsonify({"success": "Chat summary stored successfully","session_id": session_id }), 200
             
 
     except Exception as error:
         print("Error in get session summary:", error)
         return jsonify({"error": "Database error", "error_details": str(error)}), 500
+# store crisis response in database
+def storeCrisisEvents(user_id, session_id, crisis_list):
+    try:
+        with psycopg2.connect(**params) as conn:
+            cur = conn.cursor()
+
+            for event in crisis_list:
+                cur.execute("""
+                    INSERT INTO crisis_management (
+                        user_id,
+                        session_id,
+                        crisis_triggered,
+                        response_given,
+                        therapist_contacted
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (user_id, session_id,True,  # Always true if it's added to this list
+                    event['response'],
+                    event['therapist_contacted']
+                ))
+
+            conn.commit()
+            print(f"Stored {len(crisis_list)} crisis events for session {session_id}")
+
+    except Exception as e:
+        print("❌ Error storing crisis events:", e)
