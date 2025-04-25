@@ -13,6 +13,7 @@ PyPDF2
 openai
 python-dotenv
 gTTS
+pinecone
 pinecone-client
 langchain-community
 beautifulsoup4

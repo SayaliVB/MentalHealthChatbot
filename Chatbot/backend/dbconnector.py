@@ -10,7 +10,7 @@ bcrypt = Bcrypt()
 # read connection parameters
 params = connection()
 # to register a user 
-def registeruser(firstname,lastname, email, password):
+def registeruser(email, password):
     data = {}  # Use a dictionary to store the response data
     # Hash the password before storing
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -21,15 +21,15 @@ def registeruser(firstname,lastname, email, password):
             cur = conn.cursor()
 
             # Write query
-            query = '''INSERT INTO users (id,firstname,lastname, email,password_hash) VALUES (%s,%s, %s, %s,%s);'''
+            query = '''INSERT INTO users (id, email,password_hash) VALUES (%s, %s,%s);'''
             cur.execute('''select max(id) from users;''')
             max_id = cur.fetchone()[0]
-            print(max_id)
             if (max_id != None):
             # Execute the query
-                cur.execute(query, (max_id+1,firstname,lastname, email,hashed_password))
+                max_id +=1
+                cur.execute(query, (max_id, email,hashed_password))
             else:
-                cur.execute(query, (1,firstname,lastname, email,hashed_password))
+                cur.execute(query, (1, email,hashed_password))
                 
             conn.commit()
 
@@ -44,6 +44,7 @@ def registeruser(firstname,lastname, email, password):
 
             data['success'] = True
             data['message'] = 'User registration successful'
+            data['userid'] = max_id
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error in registeruser()")
@@ -63,6 +64,51 @@ def registeruser(firstname,lastname, email, password):
         print("jsonifydata",jsonify(data))
     return jsonify(data)
 
+def completeprofile(userid, firstname, lastname, age, gender, culture, history):
+    data = {}  # Use a dictionary to store the response data
+    # Hash the password before storing
+    try:
+        # Establish connection and create a cursor
+        with psycopg2.connect(**params) as conn:
+            # Create a cursor
+            cur = conn.cursor()
+
+            # Write query
+            query = '''UPDATE users SET firstname = %s,lastname = %s, age = %s, gender = %s, culture = %s, history = %s
+            WHERE id = %s;'''
+            cur.execute(query, (firstname,lastname, age, gender, culture, history, userid))
+               
+            conn.commit()
+
+            # Set success response data
+            '''
+            {
+            "success": true,
+            "message": "Profile saved successfully"
+            }
+
+            '''           
+
+            data['success'] = True
+            data['message'] = 'Profile saved successfully'
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error in completeprofile()")
+        print(error)
+        data['success'] = False
+        data['error'] = 'Error in saving profile'
+        data['error_details'] = str(error)
+        '''
+        error response
+            {
+            "success": false,
+            "error": "Error in saving profile",
+            "error_details": "duplicate key value violates unique constraint"
+            }
+
+        '''   
+        print("jsonifydata",jsonify(data))
+    return jsonify(data)
 
 def checkLoginCredentials(email, password):
     """Verifies login credentials using Flask-Bcrypt."""
