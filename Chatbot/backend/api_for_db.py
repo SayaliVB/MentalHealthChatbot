@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import requests
 import dbconnector as dbc
 from chatbot_logic import create_chat_summary, get_bot_response  # <-- your main bot logic
 import os
@@ -89,6 +90,7 @@ def store_chat_summary():
 
     userid = data.get("userid", None)
     print("In session summary route")
+    print("userid", userid)
     chat_history = data.get("chatHistory", None)
     session_summary = create_chat_summary(chat_history)
     print("Session summary:", session_summary)

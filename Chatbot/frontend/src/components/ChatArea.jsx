@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import '../styles/ChatArea.css';
 
-const ChatArea = ({ userName = "User" }) => {
+const ChatArea = ({ userName = "User", isTTS  }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-
+  // play tts if the user has enabled it
+  const playTTS = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    speechSynthesis.speak(utterance);
+  };
+  
+  
   const handleSend = async () => {
     if (input.trim()) {
       const newMessage = { id: Date.now(), text: input, sender: 'user' };
@@ -27,6 +34,10 @@ const ChatArea = ({ userName = "User" }) => {
           text: data.response || "Sorry, I didn't get that.",
           sender: 'ai',
         };
+        if (isTTS) {
+          console.log("📢 Playing TTS for:", aiResponse.text);
+          playTTS(aiResponse.text);
+        }        
         setMessages((prev) => [...prev, aiResponse]);
       } catch (error) {
         console.error("Error fetching response:", error);
