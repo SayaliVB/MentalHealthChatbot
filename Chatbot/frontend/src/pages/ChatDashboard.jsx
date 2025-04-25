@@ -13,6 +13,9 @@ const ChatDashboard = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [userLocation, setUserLocation] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: SF
   const [userName, setUserName] = useState('');
+  // for TTS the user can toggle it on and off
+  const [isTTS, setIsTTS] = useState(false);
+  const toggleTTS = () => setIsTTS(prev => !prev);
 
   // Get user name and location on mount
   useEffect(() => {
@@ -39,8 +42,8 @@ const ChatDashboard = () => {
       <Sidebar userName={userName} />
 
       <div className="main-content">
-        <Header userName={userName} onOpenSettings={() => setIsModalOpen(true)} />
-
+        {/* <Header userName={userName} onOpenSettings={() => setIsModalOpen(true)} /> */}
+        <Header userName={userName} onOpenSettings={() => setIsModalOpen(true)} isTTS={isTTS} toggleTTS={toggleTTS} />
         {isModalOpen && (
           <SettingsModal
             onClose={() => setIsModalOpen(false)}
@@ -50,7 +53,9 @@ const ChatDashboard = () => {
           />
         )}
 
-        <ChatArea userName={userName} />
+         {/* Chat area for user interaction with tts */}
+         {/* <ChatArea userName={userName} /> */}
+        <ChatArea userName={userName} isTTS={isTTS} />
 
         {/* Immediate Help button */}
         <CrisisButton onClick={handleShowImmediateHelp} />

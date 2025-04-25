@@ -12,4 +12,11 @@ sentence-transformers
 PyPDF2
 openai
 python-dotenv
+gTTS
+pinecone-client
+langchain-community
+beautifulsoup4
+duckduckgo-search
+
+
 
