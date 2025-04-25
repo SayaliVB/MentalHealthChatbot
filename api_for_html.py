@@ -70,7 +70,7 @@ def login():
 
 # Function to start Streamlit app
 def run_streamlit():
-    streamlit_script = "faiss_app_culture.py"
+    streamlit_script = "app_culture.py"
     subprocess.Popen(
         ["streamlit", "run", streamlit_script, "--server.headless", "true"],
         stdout=subprocess.PIPE,

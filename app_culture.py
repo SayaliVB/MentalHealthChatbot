@@ -118,7 +118,6 @@ def fetch_chat_summary(user_id):
     else:
         return None
 
-
 # Function to store chat summary in PostgreSQL
 def store_chat_summary(user_id, history):
     # Convert chat history (list of tuples) into readable text format
@@ -157,7 +156,6 @@ def summarize_chat(messages):
         temperature=0.5
     )
     return response.choices[0].message.content.strip()
-
 
 def get_relevant_examples(query, max_length=2000):
     examples = []
@@ -226,8 +224,16 @@ def initialize_session_state(user_id):
         st.session_state['generated'] = [f"Hello {user}! I'm here to support your mental health journey. 😊"]
 
     if 'past' not in st.session_state:
-        st.session_state["past"] = [fetch_chat_summary(user_id) or "No previous session data."]
-
+        st.session_state["past"] = [fetch_chat_summary(user_id)] #or "No previous session data."
+    
+    if st.session_state["past"][0] is None:
+        if "profile_stage" not in st.session_state:
+            st.session_state["profile_completed"] = False
+            st.session_state["profile"] = {}
+            st.session_state["profile_stage"] = 0
+            st.session_state['generated'].append("May I have your first name?") 
+    else:
+        st.session_state["profile_completed"] = True
 
 def format_history():
     """
@@ -249,8 +255,8 @@ def conversation_chat(question):
     # else:
     #     web_info = ""
     
-    st.warning(anxiety_web_info)
-    st.warning(depression_web_info)
+    # st.warning(anxiety_web_info)
+    # st.warning(depression_web_info)
 
     response = llm_chain.invoke({
         "examples": limited_examples,
@@ -277,18 +283,50 @@ def display_chat_history():
             submit_button = st.form_submit_button(label='Send')
 
         if submit_button and user_input:
-            output = conversation_chat(user_input)
-            if not isinstance(output, str):
-                output = str(output)
+            if not st.session_state["profile_completed"]:
+                profile_questions = [
+                    ("May I have your first name?", "fname"),
+                    ("May I have your last name?", "lname"),
+                    ("How old are you?", "age"),
+                    ("What’s your gender?", "gender"),
+                    ("Which cultural background do you identify with?", "culture"),
+                    ("Have you experienced any mental health concerns before?", "history")
+                ]
+                if st.session_state["profile_stage"] < len(profile_questions):
+                    _, key = profile_questions[st.session_state["profile_stage"]]
+                    st.session_state["profile"][key] = user_input
+                    st.session_state["profile_stage"] += 1
 
-            st.session_state['past'].append(user_input)
-            st.session_state['generated'].append(output)
+                    if st.session_state["profile_stage"] < len(profile_questions):
+                        next_question, _ = profile_questions[st.session_state["profile_stage"]]
+                        print(next_question)
+                        st.session_state["generated"].append(next_question)
+                    else:
+                        st.session_state["profile_completed"] = True
+                        st.session_state["generated"].append("Thanks for sharing! I'm ready to help you now 😊")
+
+                    st.session_state['past'].append(user_input)
+                
+                # st.warning(st.session_state["profile"])
+                # st.warning(st.session_state["profile_completed"])
+            else:
+                output = conversation_chat(user_input)
+                if not isinstance(output, str):
+                    output = str(output)
+                # st.warning("in else")
+
+                st.session_state['past'].append(user_input)
+                st.session_state['generated'].append(output)
 
     if st.session_state['generated']:
+        # st.warning(st.session_state["past"])
+        # st.warning(st.session_state["generated"])
         with reply_container:
-            for i in range(len(st.session_state['generated'])):
-                message(st.session_state["past"][i], is_user=True, key=str(i) + '_user', avatar_style="thumbs")
+            message(st.session_state["generated"][0], key=str(0), avatar_style="fun-emoji")
+            for i in range(1, len(st.session_state['generated'])):
                 message(st.session_state["generated"][i], key=str(i), avatar_style="fun-emoji")
+                if st.session_state["past"][-1] is not None and len(st.session_state["past"]) > i:
+                    message(st.session_state["past"][i], is_user=True, key=str(i) + '_user', avatar_style="thumbs")
 
 # Initialize session state
 initialize_session_state(user_id)
