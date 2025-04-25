@@ -86,7 +86,7 @@ const ChatArea = ({ userName = "User", isTTS  }) => {
       });
       if (response.ok) {
         console.log("Summary and crisis events sent successfully.");
-        // Clear crisis events
+        // Clear crisis events after storing
         setCrisisEvents([]);
       }
   
