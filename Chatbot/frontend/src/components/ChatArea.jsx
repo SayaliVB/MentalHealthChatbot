@@ -10,7 +10,9 @@ const ChatArea = ({ userName = "User", isTTS  }) => {
     utterance.lang = 'en-US';
     speechSynthesis.speak(utterance);
   };
-  
+  //crisis detection
+  const [crisisEvents, setCrisisEvents] = useState([]);
+
   
   const handleSend = async () => {
     if (input.trim()) {
@@ -34,8 +36,25 @@ const ChatArea = ({ userName = "User", isTTS  }) => {
           text: data.response || "Sorry, I didn't get that.",
           sender: 'ai',
         };
+        // Crisis detection logic now in correct place
+        console.log("AI Response:", data.response);
+        console.log("isCrisis:", data.isCrisis);
+        if (data.isCrisis === true) {
+          setCrisisEvents((prev) => {
+            const updated = [
+              ...prev,
+              {
+                response: data.response,
+                therapist_contacted: false,
+                timestamp: new Date().toISOString(),
+              }
+            ];
+            console.log("Crisis Detected! Updated crisisEvents:", updated);
+            return updated;
+          });
+        }
         if (isTTS) {
-          console.log("📢 Playing TTS for:", aiResponse.text);
+          console.log("Playing TTS for:", aiResponse.text);
           playTTS(aiResponse.text);
         }        
         setMessages((prev) => [...prev, aiResponse]);
@@ -61,6 +80,8 @@ const ChatArea = ({ userName = "User", isTTS  }) => {
         body: JSON.stringify({
           userid: localStorage.getItem("userId"),
           chatHistory: messages,
+          //pass the crisis events to the backend
+          crisisEvents: crisisEvents,
         }),
       });
     } catch (error) {
