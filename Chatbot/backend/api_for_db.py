@@ -12,19 +12,44 @@ CORS(app)
 def register():
     try:
         result = request.get_json()
-        firstname = result.get('firstname')
-        lastname = result.get('lastname')
         email = result.get('email')
         password = result.get('password')
+        
 
-        if not firstname or not lastname or not email or not password:
+        if not email or not password:
             return jsonify({"success": False, "message": "All fields are required."}), 400
 
-        response = dbc.registeruser(firstname, lastname, email, password)
+        response = dbc.registeruser(email, password)
         return response
 
     except Exception as e:
         return jsonify({"success": False, "message": "Signup failed", "error": str(e)}), 500
+
+# === Profile Route ===
+@app.route('/profile', methods=['POST'])
+def profile():
+    try:
+        result = request.get_json()
+        userid = result.get('userid')
+        firstname = result.get('firstname')
+        lastname = result.get('lastname')
+        age = result.get('age')
+        gender = result.get('gender')
+        culture = result.get('culture')
+        history = result.get('history')
+
+        if not userid:
+            return jsonify({"success": False, "message": "Userid not found"}), 404
+
+        if not firstname or not lastname or not gender or not age:
+            return jsonify({"success": False, "message": "All fields are required."}), 400
+
+        response = dbc.completeprofile(userid, firstname, lastname, age, gender, culture, history)
+        return response
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Profile update failed", "error": str(e)}), 500
+
 
 
 # === Login Route ===
