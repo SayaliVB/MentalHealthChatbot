@@ -6,8 +6,6 @@ from utils.memory_manager import get_memory
 # Import Tools
 from tools.pinecone_search_tool import PineconeSearchTool
 from tools.web_search_tool import WebSearchTool
-# from tools.sentiment_tool import SentimentAnalysisTool
-# from tools.crisis_detection_tool import CrisisDetectionTool
 from tools.chat_summary_tool import ChatSummaryTool
 
 import os
@@ -17,15 +15,12 @@ from dotenv import load_dotenv
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-def get_router_agent(embed_model, pdf_index, json_index, web_index):
+def get_router_agent(embed_model, pdf_index, json_index, web_index, system_message: str = ""):
     """
     Builds and returns the Router Agent with all registered tools.
     """
     print("inside router_agent")
-    print("embed_model", embed_model)
-    print("pdf_index", pdf_index)
-    print("json_index", json_index)
-    print("web_index", web_index)
+    print("system_message", system_message)
     llm = OpenAI(
         temperature=0.7,
         openai_api_key=OPENAI_API_KEY
@@ -75,6 +70,8 @@ def get_router_agent(embed_model, pdf_index, json_index, web_index):
     - Be empathetic, supportive, and concise.
     - Do not invent any data. Always rely on tool output if available.
     """
+    
+
     agent = initialize_agent(
         tools=tools,
         llm=llm,

@@ -175,11 +175,13 @@ def chat():
         data = request.get_json()
         user_input = data.get("question", "")
         history = data.get("history", "")
+        user_name = data.get("userName", "User")
+        culture = data.get("culture", "Unknown")
 
         if not user_input:
             return jsonify({"success": False, "message": "Question is required."}), 400
 
-        response = get_bot_response(user_input, history)
+        response = get_bot_response(user_input, history, user_name, culture)
         # crisis detection
         is_crisis_triggered = (response == crisis_tool_response())
 

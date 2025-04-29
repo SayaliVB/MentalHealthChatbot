@@ -34,7 +34,7 @@ const Login = () => {
         localStorage.setItem("userId", result.user.id);
         localStorage.setItem("username", result.user.firstname);
         localStorage.setItem("useremail", result.user.email);
-        
+        localStorage.setItem("culture", result.user.culture);        
         alert("Login Successful!");
         navigate("/dashboard");
       } else {
@@ -47,9 +47,7 @@ const Login = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-  
-  
+  };  
 
   return (
     <div className="login-container">
