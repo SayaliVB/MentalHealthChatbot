@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import ChatArea from '../components/ChatArea';
 import CrisisButton from '../components/CrisisButton';
 import SettingsModal from '../components/SettingsModal';
-import MapModal from '../components/MapModal'; // New modal for doctors
+import MapModal from '../components/MapModal'; 
 import '../styles/ChatDashboard.css';
 
 const ChatDashboard = () => {
@@ -13,6 +13,7 @@ const ChatDashboard = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [userLocation, setUserLocation] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: SF
   const [userName, setUserName] = useState('');
+  
   // for TTS the user can toggle it on and off
   const [isTTS, setIsTTS] = useState(false);
   const toggleTTS = () => setIsTTS(prev => !prev);
@@ -52,7 +53,7 @@ const ChatDashboard = () => {
             userName={userName}
           />
         )}
-
+         
          {/* Chat area for user interaction with tts */}
          {/* <ChatArea userName={userName} /> */}
         <ChatArea userName={userName} isTTS={isTTS} />
