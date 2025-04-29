@@ -20,7 +20,8 @@ const ChatArea = ({ userName = "User", isTTS }) => {
   const handleSend = async () => {
     if (input.trim()) {
       const newMessage = { id: Date.now(), text: input, sender: 'user' };
-      setMessages((prev) => [...prev, newMessage]);
+      const updatedMessages = [...messages, newMessage];
+      setMessages(updatedMessages);
       setInput('');
 
       try {
@@ -29,7 +30,9 @@ const ChatArea = ({ userName = "User", isTTS }) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             question: input,
-            history: messages.map(msg => `${msg.sender === 'user' ? 'User' : 'Bot'}: ${msg.text}`).join("\n")
+            history: updatedMessages, // ✅ Send actual message buffer, not joined string
+            userName: localStorage.getItem("username") || "User",
+            culture: localStorage.getItem("culture") || "Unknown"
           }),
         });
 
@@ -87,11 +90,6 @@ const ChatArea = ({ userName = "User", isTTS }) => {
 
   return (
     <div className="chat-area">
-      {/* <div className="summary-card">
-        The user expressed feelings of loneliness... (summary here)
-      </div> */}
-
-      {/* Chat Messages Scrollable */}
       <div className="chat-messages-container">
         {messages.map((msg) => (
           <div key={msg.id} className={`chat-message ${msg.sender}`}>
@@ -108,7 +106,6 @@ const ChatArea = ({ userName = "User", isTTS }) => {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Form Fixed */}
       <div className="chat-input-container">
         <input
           type="text"

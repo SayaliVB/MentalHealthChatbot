@@ -116,7 +116,7 @@ def checkLoginCredentials(email, password):
         params = connection()
         with psycopg2.connect(**params) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                query = "SELECT id, firstname, email, password_hash FROM users WHERE email = %s"
+                query = "SELECT id, firstname, email, password_hash, culture FROM users WHERE email = %s"
                 cur.execute(query, (email,))
                 user = cur.fetchone()
 
@@ -129,7 +129,8 @@ def checkLoginCredentials(email, password):
                             "user": {
                                 "id": user["id"],
                                 "firstname": user["firstname"],
-                                "email": user["email"]
+                                "email": user["email"],
+                                "culture": user["culture"]
                             }
                         })
                     else:
