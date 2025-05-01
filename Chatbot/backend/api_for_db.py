@@ -166,31 +166,51 @@ def get_nearby_doctors():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
 # === Chat Route ===
 @app.route("/chat", methods=["POST"])
 def chat():
     try:
         data = request.get_json()
-        user_input = data.get("question", "")
+        user_input = data.get("question", "").strip()
         history = data.get("history", "")
         user_name = data.get("userName", "User")
         culture = data.get("culture", "Unknown")
+        lat = data.get("lat")
+        lng = data.get("lng")
+        user_id = data.get("user_id")
+        print("inside api_for_db User ID:", user_id)
 
         if not user_input:
             return jsonify({"success": False, "message": "Question is required."}), 400
 
-        response = get_bot_response(user_input, history, user_name, culture)
-        # crisis detection
+        if user_input.lower() == "find nearest therapists" and lat and lng:
+            from tools.nearest_therapist_tool import NearestTherapistLocatorTool
+            tool = NearestTherapistLocatorTool()
+            location_str = f"{lat},{lng}"
+            tool_output = tool.run(location_str)
+
+            return jsonify({
+                "success": True,
+                "response": tool_output,
+                "isCrisis": False
+            })
+
+        # Fallback: Use full agent-based chatbot logic
+        response = get_bot_response(user_input, history, user_name, culture, user_id)
         is_crisis_triggered = (response == crisis_tool_response())
 
-        return jsonify({"success": True,"response": response,"isCrisis": is_crisis_triggered})
-        # return jsonify({"success": True, "response": response})
+        return jsonify({
+            "success": True,
+            "response": response,
+            "isCrisis": is_crisis_triggered
+        })
 
     except Exception as e:
-        return jsonify({"success": False, "message": "Chat failed", "error": str(e)}), 500
-
+        return jsonify({
+            "success": False,
+            "message": "Chat failed",
+            "error": str(e)
+        }), 500
 
 # === Optional: Health Check ===
 @app.route("/health", methods=["GET"])

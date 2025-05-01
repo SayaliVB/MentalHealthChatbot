@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/ChatArea.css';
+import ReactMarkdown from 'react-markdown';
 
 const ChatArea = ({ userName = "User", isTTS }) => {
   const [messages, setMessages] = useState([]);
@@ -17,57 +18,175 @@ const ChatArea = ({ userName = "User", isTTS }) => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // const handleSend = async () => {
+  //   if (input.trim()) {
+  //     const newMessage = { id: Date.now(), text: input, sender: 'user' };
+  //     const updatedMessages = [...messages, newMessage];
+  //     setMessages(updatedMessages);
+  //     setInput('');
+
+  //     try {
+  //       const response = await fetch("http://localhost:5000/chat", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           question: input,
+  //           history: updatedMessages, // ✅ Send actual message buffer, not joined string
+  //           userName: localStorage.getItem("username") || "User",
+  //           culture: localStorage.getItem("culture") || "Unknown"
+  //         }),
+  //       });
+
+  //       const data = await response.json();
+  //       const aiResponse = {
+  //         id: Date.now() + 1,
+  //         text: data.response || "Sorry, I didn't get that.",
+  //         sender: 'ai',
+  //       };
+
+  //       if (data.isCrisis === true) {
+  //         setCrisisEvents((prev) => [...prev, {
+  //           response: data.response,
+  //           therapist_contacted: false,
+  //           timestamp: new Date().toISOString(),
+  //         }]);
+  //       }
+
+  //       if (isTTS) {
+  //         playTTS(aiResponse.text);
+  //       }
+
+  //       setMessages((prev) => [...prev, aiResponse]);
+
+  //     } catch (error) {
+  //       console.error("Error fetching response:", error);
+  //       const errorMessage = {
+  //         id: Date.now() + 1,
+  //         text: "Error connecting to the chatbot.",
+  //         sender: 'ai',
+  //       };
+  //       setMessages((prev) => [...prev, errorMessage]);
+  //     }
+  //   }
+  // };
+
   const handleSend = async () => {
     if (input.trim()) {
       const newMessage = { id: Date.now(), text: input, sender: 'user' };
       const updatedMessages = [...messages, newMessage];
       setMessages(updatedMessages);
       setInput('');
-
-      try {
-        const response = await fetch("http://localhost:5000/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question: input,
-            history: updatedMessages, // ✅ Send actual message buffer, not joined string
-            userName: localStorage.getItem("username") || "User",
-            culture: localStorage.getItem("culture") || "Unknown"
-          }),
+  
+      const loweredInput = input.toLowerCase().trim();
+  
+      // ✅ Special case for "find nearest therapists"
+      if (loweredInput === "find nearest therapists") {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+  
+          try {
+            const response = await fetch("http://localhost:5000/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                question: input,
+                lat,
+                lng,
+                history: updatedMessages,
+                userName: localStorage.getItem("username") || "User",
+                culture: localStorage.getItem("culture") || "Unknown",
+                // user_id: localStorage.getItem("user_id") || "Unknown",
+                id: parseInt(localStorage.getItem("id")) || 0,
+              }),
+            });
+  
+            const data = await response.json();
+            const aiResponse = {
+              id: Date.now() + 1,
+              text: data.response || "Sorry, I couldn't find therapists right now.",
+              sender: 'ai',
+            };
+  
+            if (data.isCrisis === true) {
+              setCrisisEvents((prev) => [...prev, {
+                response: data.response,
+                therapist_contacted: false,
+                timestamp: new Date().toISOString(),
+              }]);
+            }
+  
+            if (isTTS) {
+              playTTS(aiResponse.text);
+            }
+  
+            setMessages((prev) => [...prev, aiResponse]);
+  
+          } catch (error) {
+            console.error("Error fetching nearest therapists:", error);
+            setMessages((prev) => [...prev, {
+              id: Date.now() + 1,
+              text: "Error finding therapists near your location.",
+              sender: 'ai',
+            }]);
+          }
+        }, (error) => {
+          console.error("Geolocation error:", error);
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: "Location access is required to find nearby therapists.",
+            sender: 'ai',
+          }]);
         });
-
-        const data = await response.json();
-        const aiResponse = {
-          id: Date.now() + 1,
-          text: data.response || "Sorry, I didn't get that.",
-          sender: 'ai',
-        };
-
-        if (data.isCrisis === true) {
-          setCrisisEvents((prev) => [...prev, {
-            response: data.response,
-            therapist_contacted: false,
-            timestamp: new Date().toISOString(),
+  
+      } else {
+        // 🧠 Normal chat handling
+        try {
+          const response = await fetch("http://localhost:5000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: input,
+              history: updatedMessages,
+              userName: localStorage.getItem("username") || "User",
+              culture: localStorage.getItem("culture") || "Unknown", 
+              user_id: parseInt(localStorage.getItem("userId")) || 0,
+            }),
+          });
+  
+          const data = await response.json();
+          const aiResponse = {
+            id: Date.now() + 1,
+            text: data.response || "Sorry, I didn't get that.",
+            sender: 'ai',
+          };
+  
+          if (data.isCrisis === true) {
+            setCrisisEvents((prev) => [...prev, {
+              response: data.response,
+              therapist_contacted: false,
+              timestamp: new Date().toISOString(),
+            }]);
+          }
+  
+          if (isTTS) {
+            playTTS(aiResponse.text);
+          }
+  
+          setMessages((prev) => [...prev, aiResponse]);
+  
+        } catch (error) {
+          console.error("Error fetching response:", error);
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: "Error connecting to the chatbot.",
+            sender: 'ai',
           }]);
         }
-
-        if (isTTS) {
-          playTTS(aiResponse.text);
-        }
-
-        setMessages((prev) => [...prev, aiResponse]);
-
-      } catch (error) {
-        console.error("Error fetching response:", error);
-        const errorMessage = {
-          id: Date.now() + 1,
-          text: "Error connecting to the chatbot.",
-          sender: 'ai',
-        };
-        setMessages((prev) => [...prev, errorMessage]);
       }
     }
   };
+  
 
   const handleEndChat = async () => {
     try {
@@ -100,7 +219,13 @@ const ChatArea = ({ userName = "User", isTTS }) => {
                 className="chat-avatar"
               />
             )}
-            <div className="chat-bubble">{msg.text}</div>
+            {/* <div className="chat-bubble">{msg.text}</div> */}
+            <div className="chat-bubble">
+              {/* {msg.text.split('\n').map((line, i) => (
+                <div key={i}>{line}</div>
+              ))} */}
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
+            </div>
           </div>
         ))}
         <div ref={bottomRef} />

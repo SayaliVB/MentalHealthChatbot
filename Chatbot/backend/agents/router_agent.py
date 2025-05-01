@@ -6,6 +6,7 @@ from utils.memory_manager import get_memory
 # Import Tools
 from tools.pinecone_search_tool import PineconeSearchTool
 from tools.web_search_tool import WebSearchTool
+from tools.nearest_therapist_tool import NearestTherapistLocatorTool
 from tools.chat_summary_tool import ChatSummaryTool
 
 import os
@@ -19,8 +20,8 @@ def get_router_agent(embed_model, pdf_index, json_index, web_index, system_messa
     """
     Builds and returns the Router Agent with all registered tools.
     """
-    print("inside router_agent")
-    print("system_message", system_message)
+    # print("inside router_agent")
+    # print("system_message", system_message)
     llm = OpenAI(
         temperature=0.7,
         openai_api_key=OPENAI_API_KEY
@@ -32,6 +33,7 @@ def get_router_agent(embed_model, pdf_index, json_index, web_index, system_messa
         PineconeSearchTool(embed_model, pdf_index, json_index, web_index),
         WebSearchTool(),
         ChatSummaryTool(),
+        NearestTherapistLocatorTool(),
     ]
 
     system_message = """
@@ -60,10 +62,18 @@ def get_router_agent(embed_model, pdf_index, json_index, web_index, system_messa
     - The user asks about current events, news, real-time info, recent discoveries, latest updates.
     - Keywords may include: "latest", "current", "new", "today", "2024", "benefits of", "trending", "real-time".
 
-    3. Use the 'ResourceLookup' tool when:
+    3. Use the 'ChatSummary' tool when:
     - The user wants information about their previous sessions or chat summary.
     - Keywords may include: "last chat", "chat summary", "previous conversation", "what did we talk about", "my summary", "past session".
-
+    
+    4. Use the 'NearestTherapistLocator' tool when:
+    - The user message is exactly 'find nearest therapists'.
+    - Do not use this tool for any other phrasing.
+    - User’s location will be passed automatically.
+    When you use the 'NearestTherapistLocator' tool, DO NOT generate your own answer.
+    Instead, return the exact result from the tool as your final answer — **word for word**.
+    Never modify or summarize the tool output. Never say things like “I hope that helps” or “Would you like to know more?”. Just give the full tool result directly.
+    
     Rules:
     - Always use ONLY ONE tool per query.
     - Prefer PineconeSearch when in doubt for general mental health queries.
