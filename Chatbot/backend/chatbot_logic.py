@@ -166,7 +166,6 @@ def rank_responses(query: str, raw_response: str, agent_response: str) -> str:
         print(f" Error comparing responses: {e}")
         return "B"  
 
-# === Main Bot Logic ===
 def get_bot_response(user_input: str, history: list = [], user_name: str = "User", culture: str = "Unknown", user_id: int = None) -> str:
     try:
         if is_crisis(user_input):
@@ -179,7 +178,6 @@ def get_bot_response(user_input: str, history: list = [], user_name: str = "User
                 chat_history.append(HumanMessage(content=message['text']))
             elif message['sender'] == 'ai':
                 chat_history.append(AIMessage(content=message['text']))
-
         router_agent.memory.chat_memory.messages = chat_history
 
         CULTURE_PRACTICES = {
@@ -204,42 +202,43 @@ def get_bot_response(user_input: str, history: list = [], user_name: str = "User
 
         Also, naturally address the user by their first name, {user_name}, in your responses.
         Your tone should be empathetic, calming, and human-like.
-        """        
+        """
+
+        # === Detect if we should format the input for ChatSummaryTool
         summary_keywords = [
-            "summary", "previous", "chat", "conversation", "session", 
+            "summary", "previous", "chat", "conversation", "session",
             "what did we talk", "my summary", "past"
         ]
-
         if any(kw in user_input.lower() for kw in summary_keywords) and "|" not in user_input and user_id:
             modified_input = f"{user_input.strip()} | {user_id}"
             print("🧠 Modified input for ChatSummaryTool:", modified_input)
         else:
             modified_input = user_input
-                
+
         # === Raw LLM output
         raw_llm_response = get_raw_llm_response(modified_input)
         print(f"🔍 Raw LLM response: {raw_llm_response}")
 
-        # === Agent output with tools
+        # === Agent toolchain execution
         personalized_agent = get_router_agent(embed_model, pdf_index, json_index, web_index, system_message)
         personalized_agent.memory.chat_memory.messages = chat_history
         agent_result = personalized_agent.invoke(modified_input)
         agent_response = agent_result["output"]
-        
-        # If the agent used a tool and gave a result, use it
+
+        # === Tool detection (structured logic)
         intermediate = agent_result.get("intermediate_steps", [])
-        if any("Observation" in step.get("log", "") for step in intermediate):
+        tool_used = any(
+            "Observation:" in step.get("log", "") and "Error" not in step.get("log", "")
+            for step in intermediate
+        )
+
+        if tool_used:
+            print("✅ Tool was used successfully — using agent response.")
             return agent_response
-
-        # Otherwise, fall back to ranking
-        selected = rank_responses(modified_input, raw_llm_response, agent_response)
-        return agent_response if selected == "B" else raw_llm_response
-
-        # # === Choose better response via GPT-4 ranking
-        # selected = rank_responses(modified_input, raw_llm_response, agent_response)
-        # # print(f" GPT-4 selected response: {selected}")
-
-        # return agent_response if selected == "B" else raw_llm_response
+        else:
+            print("🧠 No valid tool output — falling back to raw LLM response.")
+            selected = rank_responses(modified_input, raw_llm_response, agent_response)
+            return agent_response if selected == "B" else raw_llm_response
 
     except Exception as e:
         return f"Agent Error: {str(e)}"
