@@ -34,7 +34,8 @@ const Login = () => {
         localStorage.setItem("userId", result.user.id);
         localStorage.setItem("username", result.user.firstname);
         localStorage.setItem("useremail", result.user.email);
-        localStorage.setItem("culture", result.user.culture);        
+        localStorage.setItem("culture", result.user.culture);   
+             
         alert("Login Successful!");
         navigate("/dashboard");
       } else {
