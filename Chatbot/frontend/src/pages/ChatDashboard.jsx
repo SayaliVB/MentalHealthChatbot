@@ -18,6 +18,15 @@ const ChatDashboard = () => {
   const [isTTS, setIsTTS] = useState(false);
   const toggleTTS = () => setIsTTS(prev => !prev);
 
+  const [messages, setMessages] = useState([]);
+  const [crisisEvents, setCrisisEvents] = useState([]);
+
+  //Function to clear the chat
+  const clearChat = () => {
+    setMessages([]);
+    setCrisisEvents([]);
+  };
+
   // Get user name and location on mount
   useEffect(() => {
     const storedName = localStorage.getItem('username');
@@ -40,7 +49,14 @@ const ChatDashboard = () => {
 
   return (
     <div className={`dashboard-container ${isDarkMode ? 'dark' : ''}`}>
-      <Sidebar userName={userName} />
+      <Sidebar 
+        userName={userName} 
+        clearChat={clearChat}
+        setMessages={setMessages}
+        messages={messages}
+        userLocation={userLocation}
+        setCrisisEvents={setCrisisEvents}
+      />
 
       <div className="main-content">
         {/* <Header userName={userName} onOpenSettings={() => setIsModalOpen(true)} /> */}
@@ -54,10 +70,14 @@ const ChatDashboard = () => {
           />
         )}
          
-         {/* Chat area for user interaction with tts */}
-         {/* <ChatArea userName={userName} /> */}
-        <ChatArea userName={userName} isTTS={isTTS} />
-
+         <ChatArea 
+          userName={userName} 
+          isTTS={isTTS} 
+          messages={messages}
+          setMessages={setMessages}
+          crisisEvents={crisisEvents}
+          setCrisisEvents={setCrisisEvents}
+        />
         {/* Immediate Help button */}
         <CrisisButton onClick={handleShowImmediateHelp} />
 
