@@ -1,0 +1,120 @@
+
+/* General Page Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #E6E0EB;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Login Form Container */
+.login-container {
+    background: #D7CCE8;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 600px; 
+    max-width: 90%;
+    max-height: 800px;
+}
+
+/* Logo */
+.logo img {
+    width:80px;
+    height: 80px;
+}
+
+/* Form Fields */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    text-align: left;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #aaa;
+    background-color: #eae5e5;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+/* Buttons */
+.login-btn {
+    background-color: #9279A6;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 18px;
+    display: block;
+    width: 50%;  
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.login-btn:hover {
+    background-color: #7A5E8E;
+}
+
+/* Google Login Button */
+.google-btn {
+    width: 205px;
+    height: 60px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin: 20px auto 0; 
+    cursor: pointer;
+   font-size: 18px;
+    background-color: rgb(215, 211, 211);
+    border-radius: 5px;
+    gap: 20px;
+}
+
+.google-btn img {
+    width: 60px;
+    height: 60px;
+    display: block;
+}
+
+/* Links */
+a {
+    color: #5A3E7B;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Divider */
+.divider {
+    margin: 15px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 400px) {
+    .login-container {
+        width: 90%;
+    }
+}

@@ -1,0 +1,40 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color:white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-content {
+  margin-left: 250px;
+  margin-top: 60px;
+  padding: 20px;
+  flex-grow: 1;
+  background-color: white;
+  
+}
+
+.crisis-button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 1000;
+}
+
+.crisis-button {
+  background-color: #f44336;
+  color: white;
+  font-weight: bold;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.crisis-button:hover {
+  background-color: #d32f2f;
+}

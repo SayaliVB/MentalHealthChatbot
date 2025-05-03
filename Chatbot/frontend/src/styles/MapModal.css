@@ -1,0 +1,84 @@
+.map-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .map-modal {
+    background: #fff;
+    padding: 24px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    overflow-y: auto;
+    max-height: 90vh;
+  }
+  
+  .close-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #0B2B5B;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .doctor-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  
+  .doctor-list li {
+    padding: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .doctor-list li:hover {
+    background: #f9f9f9;
+  }
+  
+  .selected-doc {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+  
+  .helpline-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+  }
+  
+  .helpline-list {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 1rem;
+    color: #2e3b4e;
+  }
+  
+  .helpline-link {
+    color: #5a2ebf;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  .helpline-link:hover {
+    text-decoration: underline;
+  }
+  
+  
