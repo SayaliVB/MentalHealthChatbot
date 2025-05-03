@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./pages/Login";
 import SignIn from "./pages/SignIn";
 import ChatDashboard from "./pages/ChatDashboard";
-import './App.css'
 import Profile from "./pages/Profile";
+import './App.css'
 
 const App = () => {
   return (

@@ -5,7 +5,7 @@ const Header = ({ isTTS, toggleTTS }) => {
   return (
     <header className="header">
       <div>🧠 Mental Health ChatBot – Your AI Support Companion</div>
-      <div className="tts-toggle">
+      {/* <div className="tts-toggle">
         <label htmlFor="ttsToggle">🔊 TTS</label>
         <input
           type="checkbox"
@@ -13,7 +13,7 @@ const Header = ({ isTTS, toggleTTS }) => {
           checked={isTTS}
           onChange={toggleTTS}
         />
-      </div>
+      </div> */}
     </header>
   );
 };

@@ -2,22 +2,36 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../styles/ChatArea.css';
 import ReactMarkdown from 'react-markdown';
 
-const ChatArea = ({ userName = "User", isTTS }) => {
-  const [messages, setMessages] = useState([]);
+const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,setCrisisEvents}) => {
+  // const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);
-  const [crisisEvents, setCrisisEvents] = useState([]);
+  // const [crisisEvents, setCrisisEvents] = useState([]);
+  const [isListening, setIsListening] = useState(false);
 
   const playTTS = (text) => {
+    if (!window.speechSynthesis) {
+      alert('TTS not supported in this browser.');
+      return;
+    }
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      return; // If already speaking, stop and return
+    }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
+    utterance.pitch = 1;
+    utterance.rate = 1;
     speechSynthesis.speak(utterance);
   };
+  
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
+  
+ 
+  
   // const handleSend = async () => {
   //   if (input.trim()) {
   //     const newMessage = { id: Date.now(), text: input, sender: 'user' };
@@ -69,6 +83,38 @@ const ChatArea = ({ userName = "User", isTTS }) => {
   //     }
   //   }
   // };
+  
+   // 🎙 Speech to Text Function
+   const handleSpeech = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+    if (!SpeechRecognition) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+  
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.start();
+    setIsListening(true);  
+  
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      setInput(speechResult);
+      setIsListening(false);  
+    };
+  
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      alert('Speech recognition failed. Please try again.');
+      setIsListening(false);  
+    };
+  
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  };
+  
 
   const handleSend = async () => {
     if (input.trim()) {
@@ -79,7 +125,7 @@ const ChatArea = ({ userName = "User", isTTS }) => {
   
       const loweredInput = input.toLowerCase().trim();
   
-      // ✅ Special case for "find nearest therapists"
+      // Special case for "find nearest therapists"
       if (loweredInput === "find nearest therapists") {
         navigator.geolocation.getCurrentPosition(async (position) => {
           const lat = position.coords.latitude;
@@ -188,23 +234,26 @@ const ChatArea = ({ userName = "User", isTTS }) => {
   };
   
 
+ 
   const handleEndChat = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/store_chat_summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userid: localStorage.getItem("userId"),
-          chatHistory: messages,
-          crisisEvents: crisisEvents,
-        }),
-      });
-      if (response.ok) {
-        setCrisisEvents([]);
+
+      try {
+        console.log("Chat History:", messages);
+        const response = await fetch("http://localhost:5000/store_chat_summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userid: localStorage.getItem("userid"),
+            chatHistory: messages,
+          }),
+        });
+      } catch (error) {
+        console.error("Error storing chat summary:", error);
       }
-    } catch (error) {
-      console.error("Error storing chat summary:", error);
-    }
+    
+
+    setCrisisEvents([]);
+    setMessages([]);
   };
 
   return (
@@ -219,13 +268,29 @@ const ChatArea = ({ userName = "User", isTTS }) => {
                 className="chat-avatar"
               />
             )}
-            {/* <div className="chat-bubble">{msg.text}</div> */}
-            <div className="chat-bubble">
-              {/* {msg.text.split('\n').map((line, i) => (
-                <div key={i}>{line}</div>
-              ))} */}
-              <ReactMarkdown>{msg.text}</ReactMarkdown>
-            </div>
+            {msg.sender === 'ai' ? (
+              <div className="bubble-with-button">
+                <div className="chat-bubble">
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                </div>
+                <button 
+                  onClick={() => playTTS(msg.text)} 
+                  className="tts-button"
+                  title="Listen to this response"
+                >
+                  <img 
+                    src="/icons/speaker.png" 
+                    alt="Listen" 
+                    style={{ width: '25px', height: '25px' }}
+                  />
+                </button>
+              </div>
+            ) : (
+              <div className="chat-bubble">
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
+              </div>
+            )}
+            
           </div>
         ))}
         <div ref={bottomRef} />
@@ -240,6 +305,9 @@ const ChatArea = ({ userName = "User", isTTS }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
+        <button onClick={handleSpeech} className="mic-button">
+          {isListening ? '🎙️ Listening...' : '🎤 Speak'}
+        </button>
         <button onClick={handleSend} className="send-button">Send</button>
         <button onClick={handleEndChat} className="send-button">End Chat</button>
       </div>
