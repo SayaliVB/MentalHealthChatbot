@@ -245,13 +245,19 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
           body: JSON.stringify({
             userid: localStorage.getItem("userid"),
             chatHistory: messages,
+            //pass the crisis events to the backend
+            crisisEvents: crisisEvents,
           }),
         });
+        if (response.ok) {
+        console.log("Summary and crisis events sent successfully.");
+        // Clear crisis events after storing
+        setCrisisEvents([]);
+      }
       } catch (error) {
         console.error("Error storing chat summary:", error);
       }
     
-
     setCrisisEvents([]);
     setMessages([]);
   };
