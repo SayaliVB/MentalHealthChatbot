@@ -82,9 +82,15 @@ def is_crisis(user_input: str, threshold: float = 0.7) -> bool:
 
 def crisis_tool_response():
     return (
-        "\u26a0\ufe0f Crisis detected. Please reach out to a mental health professional or call a crisis helpline in your area. "
-        "You're valuable and deserve support."
+        ''' Help is available\n
+            988 Suicide and Crisis Lifeline\n
+            Call or SMS:\n
+            988\n
+            Chat : https://chat.988lifeline.org/
+        '''
     )
+    "\u26a0\ufe0f Crisis detected. Please reach out to a mental health professional or call a crisis helpline in your area. "
+    "You're valuable and deserve support."
 
 # === Chat Summary ===
 def create_chat_summary(history):

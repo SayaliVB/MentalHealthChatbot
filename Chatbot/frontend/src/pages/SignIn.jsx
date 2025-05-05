@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../styles/register.css";
 import logo from "../assets/logo.png";
 
+const GLOBAL_IP = 'http://localhost:5001';
+
 const SignIn = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -37,7 +39,7 @@ const SignIn = () => {
   
     try {
 
-      const res = await fetch("http://127.0.0.1:5000/signup", {
+      const res = await fetch(`${GLOBAL_IP}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

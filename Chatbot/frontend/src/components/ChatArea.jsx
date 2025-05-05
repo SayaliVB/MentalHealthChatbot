@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import '../styles/ChatArea.css';
 import ReactMarkdown from 'react-markdown';
 
+const GLOBAL_IP = 'http://localhost:5001';
+
 const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,setCrisisEvents}) => {
   // const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -40,7 +42,7 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
   //     setInput('');
 
   //     try {
-  //       const response = await fetch("http://localhost:5000/chat", {
+  //       const response = await fetch("${GLOBAL_IP}/chat", {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
   //         body: JSON.stringify({
@@ -132,7 +134,7 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
           const lng = position.coords.longitude;
   
           try {
-            const response = await fetch("http://localhost:5000/chat", {
+            const response = await fetch(`${GLOBAL_IP}/chat`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -188,7 +190,7 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
       } else {
         // 🧠 Normal chat handling
         try {
-          const response = await fetch("http://localhost:5000/chat", {
+          const response = await fetch(`${GLOBAL_IP}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -239,7 +241,7 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
 
       try {
         console.log("Chat History:", messages);
-        const response = await fetch("http://localhost:5000/store_chat_summary", {
+        const response = await fetch(`${GLOBAL_IP}/store_chat_summary`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

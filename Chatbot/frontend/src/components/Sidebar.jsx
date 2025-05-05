@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
+const GLOBAL_IP = 'http://localhost:5001';
+
 const Sidebar = ({ 
   userName = 'User', 
   clearChat,
@@ -24,7 +26,7 @@ const Sidebar = ({
   
     // Send request to backend
     try {
-      const response = await fetch("http://localhost:5000/chat", {
+      const response = await fetch(`${GLOBAL_IP}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

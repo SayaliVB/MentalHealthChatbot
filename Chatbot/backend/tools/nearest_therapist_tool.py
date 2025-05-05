@@ -5,6 +5,12 @@ from typing import ClassVar, Type
 from pydantic import BaseModel, Field
 import requests
 
+def get_global_ip():
+    with open('host_config.txt') as f:
+        return f.read().strip()
+
+global_ip = get_global_ip()
+
 class NearestTherapistInput(BaseModel):
     location: str = Field(..., description="Comma-separated latitude and longitude. Example: '37.7749,-122.4194'")
 
@@ -20,7 +26,7 @@ class NearestTherapistLocatorTool(BaseTool):
     def _run(self, location: str) -> str:
         try:
             lat, lng = map(float, location.strip().split(","))
-            url = f"http://127.0.0.1:5000/api/nearby-doctors?lat={lat}&lng={lng}"
+            url = f"{global_ip}/api/nearby-doctors?lat={lat}&lng={lng}"
             response = requests.get(url)
             data = response.json()
 

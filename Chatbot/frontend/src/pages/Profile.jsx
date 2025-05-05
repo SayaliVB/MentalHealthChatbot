@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../styles/Profile.css";
 import logo from "../assets/logo.png";
 
+const GLOBAL_IP = 'http://localhost:5001';
+
 const Profile = () => {
   const userId = parseInt(localStorage.getItem('userid'), 10);
   console.log("userid in profile", userId);
@@ -42,7 +44,7 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://127.0.0.1:5000/profile", {
+      const res = await fetch(`${GLOBAL_IP}/profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

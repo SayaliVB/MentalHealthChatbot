@@ -1,12 +1,18 @@
 # utils/api_client.py
 import requests
 
+def get_global_ip():
+    with open('host_config.txt') as f:
+        return f.read().strip()
+
+global_ip = get_global_ip()
+
 class APIClient:
     """
     Wrapper class for all backend API calls.
     """
 
-    def __init__(self, base_url="http://127.0.0.1:5000"):
+    def __init__(self, base_url=f"{global_ip}"):
         self.base_url = base_url
 
     def get_chat_summary(self, user_id: int) -> str:
