@@ -3,5 +3,5 @@ config.json
 __pycache__
 streamlit_embed_1.html
 .DS_Store
-/Volumes/Files/Sayali/SJSU/Sem4/CMPE295B/MentalHealthChatbot/Chatbot/backend/config.json
-/Volumes/Files/Sayali/SJSU/Sem4/CMPE295B/MentalHealthChatbot/Chatbot/backend/.env
+Chatbot/backend/.env
+Chatbot/backend/config.json

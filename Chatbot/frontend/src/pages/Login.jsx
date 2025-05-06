@@ -9,6 +9,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  const GLOBAL_IP = 'http://localhost:5001';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ const Login = () => {
     setIsSubmitting(true);
   
     try {
-      const response = await fetch("http://127.0.0.1:5000/verify_login", {
+      const response = await fetch(`${GLOBAL_IP}/verify_login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

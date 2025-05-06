@@ -6,6 +6,7 @@ const containerStyle = {
   width: '100%',
   height: '300px',
 };
+const GLOBAL_IP = 'http://localhost:5001';
 
 const libraries = ['places'];
 
@@ -27,7 +28,7 @@ const MapModal = ({ onClose, userLocation }) => {
 
   const fetchNearbyDoctors = async (lat, lng) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/nearby-doctors?lat=${lat}&lng=${lng}`);
+      const res = await fetch(`${GLOBAL_IP}/api/nearby-doctors?lat=${lat}&lng=${lng}`);
       const data = await res.json();
       setDoctorList(data.results || []);
     } catch (err) {
