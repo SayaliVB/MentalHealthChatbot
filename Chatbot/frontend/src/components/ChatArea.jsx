@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/ChatArea.css';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';   
+
 
 const GLOBAL_IP = 'http://localhost:5001';
 
@@ -279,7 +281,7 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
             {msg.sender === 'ai' ? (
               <div className="bubble-with-button">
                 <div className="chat-bubble">
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>{msg.text}</ReactMarkdown>
                 </div>
                 <button 
                   onClick={() => playTTS(msg.text)} 

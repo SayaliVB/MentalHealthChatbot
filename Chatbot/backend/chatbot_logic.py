@@ -82,13 +82,15 @@ def is_crisis(user_input: str, threshold: float = 0.7) -> bool:
 
 def crisis_tool_response():
     return (
-        ''' Help is available\n
-            988 Suicide and Crisis Lifeline\n
-            Call or SMS:\n
-            988\n
-            Chat : https://chat.988lifeline.org/
-        '''
+         
+        "Help is available<br>"
+        "988 Suicide and Crisis Lifeline<br>"
+        "Call or SMS:<br>"
+        "988<br>"
+        'Chat: <a href="https://chat.988lifeline.org" target="_blank" rel="noopener noreferrer">'
+        "https://chat.988lifeline.org</a>"
     )
+    
     "\u26a0\ufe0f Crisis detected. Please reach out to a mental health professional or call a crisis helpline in your area. "
     "You're valuable and deserve support."
 
