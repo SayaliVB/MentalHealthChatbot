@@ -247,12 +247,12 @@ const ChatArea = ({ userName = "User", isTTS, messages,setMessages,crisisEvents,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userid: localStorage.getItem("userid"),
+            userid: localStorage.getItem("userId"),
             chatHistory: messages,
-            //pass the crisis events to the backend
             crisisEvents: crisisEvents,
           }),
         });
+
         if (response.ok) {
         console.log("Summary and crisis events sent successfully.");
         // Clear crisis events after storing
