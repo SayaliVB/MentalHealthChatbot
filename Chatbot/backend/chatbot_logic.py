@@ -82,7 +82,6 @@ def is_crisis(user_input: str, threshold: float = 0.7) -> bool:
 
 def crisis_tool_response():
     return (
-         
         "Help is available<br>"
         "988 Suicide and Crisis Lifeline<br>"
         "Call or SMS:<br>"
@@ -90,7 +89,6 @@ def crisis_tool_response():
         'Chat: <a href="https://chat.988lifeline.org" target="_blank" rel="noopener noreferrer">'
         "https://chat.988lifeline.org</a>"
     )
-    
     "\u26a0\ufe0f Crisis detected. Please reach out to a mental health professional or call a crisis helpline in your area. "
     "You're valuable and deserve support."
 
@@ -130,56 +128,117 @@ def play_tts(text):
         audio_bytes = f.read()
         return base64.b64encode(audio_bytes).decode()
 
-# === Raw LLM Call ===
-def get_raw_llm_response(prompt: str) -> str:
+def get_raw_llm_response(prompt: str, user_name: str, culture: str, is_coping: bool) -> str:
+    CULTURE_PRACTICES = {
+        "India": "yoga, meditation, breathing techniques, family support",
+        "Japan": "mindfulness, community harmony, forest bathing",
+        "USA": "therapy, self‑help groups, structured counselling",
+        "Mexico": "faith-based support, family gatherings, community closeness",
+        "Nigeria": "spirituality, storytelling, extended family support",
+        "China": "Tai Chi, meditation, family cohesion",
+        "UK": "guided therapy, journaling, CBT techniques",
+        "Unknown": "general global stress‑management techniques"
+    }
+    practices = CULTURE_PRACTICES.get(culture, CULTURE_PRACTICES["Unknown"])
+
+    if is_coping:
+        system_msg = f"""
+        You are a culturally aware mental health assistant.
+
+        The user is from the {culture} culture.
+        When suggesting coping strategies, include culturally familiar practices such as: {practices}.
+
+        Do not greet the user. Address them by name ({user_name}) only when offering comfort or advice.
+        Be direct, empathetic, and actionable.
+        """
+    else:
+        system_msg = f"""
+        You are a helpful assistant.
+
+        Do NOT suggest calming techniques (like yoga, meditation, breathing, mindfulness, etc.)
+        unless the user specifically asks for stress management or coping strategies.
+
+        Do not greet the user with 'Hello' or 'Hi'. Avoid generic apologies.
+
+        Focus only on what the user asked. Be clear, concise, and supportive.
+        You may address the user as {user_name}, but only if relevant in context.
+        """
+
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a helpful mental health assistant."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": system_msg.strip()},
+                {"role": "user",   "content": prompt.strip()}
             ],
             max_tokens=400,
             temperature=0.7
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"LLM error: {str(e)}"
+        return f"LLM error: {e}"
 
-def rank_responses(query: str, raw_response: str, agent_response: str) -> str:
+def rank_responses(query: str, raw_response: str, agent_response: str, culture: str = "Unknown") -> str:
     """
-    Use GPT-4 to evaluate which response is more helpful to the user.
+    Ask GPT‑4 which reply (raw vs. agent) is more helpful
+    while explicitly weighting cultural relevance, empathy,
+    accuracy, and clarity. Returns "A" or "B".
     """
     try:
         comparison_prompt = f"""
-        You are evaluating two responses given to the user’s mental health query: "{query}".
+        You are an expert reviewer.
 
-        Response A (from the base OpenAI model):
+        User’s mental‑health query:
+        “{query}”
+
+        The user’s cultural background is: **{culture}**
+
+        --------- Response A (raw GPT‑4) ---------
         {raw_response}
 
-        Response B (from a LangChain agent with tool usage):
+        --------- Response B (tool‑assisted) ------
         {agent_response}
+        ------------------------------------------
 
-        Which response is more helpful, supportive, and informative for the user? Consider accuracy, empathy, and helpfulness.
-        Reply with only "A" or "B".
-        """
+        Choose the reply that better helps the user **and** fits their culture, using these criteria:
+
+        1️⃣  Empathy and warmth  
+        2️⃣  Cultural relevance  
+        3️⃣  Accuracy and specificity  
+        4️⃣  Clarity and actionable value  
+
+        Reply with **ONLY** the single letter **A** or **B**.
+        """.strip()
+
         comparison = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": comparison_prompt}],
             max_tokens=5,
             temperature=0
         )
-        return comparison.choices[0].message.content.strip().upper()
+        choice = comparison.choices[0].message.content.strip().upper()
+
+        return choice if choice in ("A", "B") else "B"  
+    
     except Exception as e:
-        print(f" Error comparing responses: {e}")
-        return "B"  
+        print(f"Error comparing responses: {e}")
+        return "B" 
+
+def is_coping_request(text: str) -> bool:
+    coping_keywords = [
+        "cope", "coping", "calming", "relax", "relieve stress",
+        "calm down", "handle stress", "reduce stress", "feel better",
+        "how do i deal", "how do i manage", "tips for anxiety", "ways to stay calm",
+        "stress relief", "ways to feel better", "ways to cope", "manage anxiety"
+    ]
+    text = text.lower()
+    return any(k in text for k in coping_keywords)
 
 def get_bot_response(user_input: str, history: list = [], user_name: str = "User", culture: str = "Unknown", user_id: int = None) -> str:
     try:
         if is_crisis(user_input):
             return crisis_tool_response()
-
-        # Rebuild conversation history
+        
         chat_history = []
         for message in history:
             if message['sender'] == 'user':
@@ -200,32 +259,45 @@ def get_bot_response(user_input: str, history: list = [], user_name: str = "User
         }
 
         practices = CULTURE_PRACTICES.get(culture, CULTURE_PRACTICES["Unknown"])
+        
+        if is_coping_request(user_input):
+            system_message = f"""
+            You are a culturally aware mental health assistant.
 
-        system_message = f"""
-        You are a culturally aware mental health assistant.
+            The user is from the {culture} culture.
+            When suggesting coping strategies, include culturally familiar practices such as: {practices}.
 
-        The user you are helping is from the {culture} culture.
-        When suggesting coping strategies for mental health concerns like anxiety, sadness, or stress,
-        prioritize including culturally common practices such as: {practices}.
+            Do not greet the user. Address them by name ({user_name}) only when offering comfort or advice.
+            Be direct, empathetic, and actionable.
+            """
+            print("Follow-up cultural system message applied.")
 
-        Also, naturally address the user by their first name, {user_name}, in your responses.
-        Your tone should be empathetic, calming, and human-like.
-        """
-
-        # === Detect if we should format the input for ChatSummaryTool
+        else:            
+            system_message = f"""
+            You are a helpful and supportive assistant. Use a warm, conversational tone.
+            Offer general advice or answer user queries without assuming cultural context unless specified.
+            Address the user by name ({user_name}) and keep responses concise and supportive.
+            """
+            print("General assistant system message applied.")
+        
         summary_keywords = [
             "summary", "previous", "chat", "conversation", "session",
             "what did we talk", "my summary", "past"
         ]
         if any(kw in user_input.lower() for kw in summary_keywords) and "|" not in user_input and user_id:
             modified_input = f"{user_input.strip()} | {user_id}"
-            print("🧠 Modified input for ChatSummaryTool:", modified_input)
+            print("Modified input for ChatSummaryTool:", modified_input)
         else:
             modified_input = user_input
 
         # === Raw LLM output
-        raw_llm_response = get_raw_llm_response(modified_input)
-        print(f"🔍 Raw LLM response: {raw_llm_response}")
+        is_coping = is_coping_request(user_input)
+        raw_llm_response = get_raw_llm_response(
+        modified_input,
+        user_name=user_name,
+        culture=culture,
+        is_coping=is_coping
+        )
 
         # === Agent toolchain execution
         personalized_agent = get_router_agent(embed_model, pdf_index, json_index, web_index, system_message)
@@ -239,14 +311,15 @@ def get_bot_response(user_input: str, history: list = [], user_name: str = "User
             "Observation:" in step.get("log", "") and "Error" not in step.get("log", "")
             for step in intermediate
         )
-
-        if tool_used:
-            print("✅ Tool was used successfully — using agent response.")
+        if tool_used and agent_response.strip():
             return agent_response
-        else:
-            print("🧠 No valid tool output — falling back to raw LLM response.")
-            selected = rank_responses(modified_input, raw_llm_response, agent_response)
-            return agent_response if selected == "B" else raw_llm_response
 
+        selected = rank_responses(
+            modified_input,
+            raw_llm_response,
+            agent_response,
+            culture=culture      
+        )
+        return agent_response if selected == "B" else raw_llm_response
     except Exception as e:
         return f"Agent Error: {str(e)}"
