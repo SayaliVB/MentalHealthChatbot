@@ -102,6 +102,7 @@ python api_for_db.py
 cd frontend
 npm install
 npm run dev
+npm install rehype-raw
 ```
 
 Make sure the Flask backend is running on `localhost:5001`.
