@@ -1,6 +1,6 @@
-# 📘 Empower Mental Health Chatbot
+# Empower Mental Health Chatbot
 
-🧠 A culturally sensitive AI-powered mental health chatbot using LangChain, GPT-4, Pinecone, and Flask. Developed as a master's capstone project at San José State University.
+A culturally sensitive AI-powered mental health chatbot using LangChain, GPT-4, Pinecone, and Flask. Developed as a master's capstone project at San José State University.
 
 ---
 
@@ -14,14 +14,14 @@ This chatbot addresses global mental health challenges by:
 - Enabling real-time voice/text interaction with TTS/STT  
 - Logging sessions for therapist reviews and continuity  
 
-📝 **Final Report Reference:**  
+**Final Report Reference:**  
 See Chapter 1: Introduction, Goals, and Contributions  
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
-📊 **Refer to Report: Chapter 2 – Project Architecture**
+**Refer to Report: Chapter 2 – Project Architecture**
 
 ```
 Frontend (React) <--> Flask Backend (LangChain + GPT-4) <--> PostgreSQL + Pinecone
@@ -60,20 +60,20 @@ Frontend (React) <--> Flask Backend (LangChain + GPT-4) <--> PostgreSQL + Pineco
 
 | Feature | Description |
 |--------|-------------|
-| 🧠 Cultural Personalization | Tailors prompts based on selected user culture |
-| 🔍 RAG + Pinecone | Search vector DBs for CBT, PHQ-9, Indian context, SAMHSA |
-| 📢 TTS & 🎙️ STT | Accessible speech input/output |
-| 🚨 Crisis Detection | Escalates emergencies with 988 lifeline + therapist map |
-| 📍 Therapist Locator | Uses Google Maps API to suggest nearby help |
-| 📝 Session Summaries | GPT-4 creates summaries for therapist review |
-| 🧰 Agent Tool Routing | LangChain agent selects tools dynamically |
-| 🔒 Secure Auth | Login/signup with hashed password & safe routing |
+| Cultural Personalization | Tailors prompts based on selected user culture |
+| RAG + Pinecone | Search vector DBs for CBT, PHQ-9, Indian context, SAMHSA |
+| TTS & 🎙️ STT | Accessible speech input/output |
+| Crisis Detection | Escalates emergencies with 988 lifeline + therapist map |
+| Therapist Locator | Uses Google Maps API to suggest nearby help |
+| Session Summaries | GPT-4 creates summaries for therapist review |
+| Agent Tool Routing | LangChain agent selects tools dynamically |
+| Secure Auth | Login/signup with hashed password & safe routing |
 
 ---
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
-### 📦 1. Backend Setup (Flask)
+###  1. Backend Setup (Flask)
 
 ```bash
 cd backend
@@ -96,7 +96,7 @@ python api_for_db.py
 
 ---
 
-### 🌐 2. Frontend Setup (React + Vite)
+### 2. Frontend Setup (React + Vite)
 
 ```bash
 cd frontend
@@ -109,7 +109,7 @@ Make sure the Flask backend is running on `localhost:5001`.
 
 ---
 
-## 🧪 Testing
+## Testing
 
 - ✅ 50 Test cases for Routing Agent – 88% accuracy  
 - ✅ 50 Crisis Detection inputs – 94% accuracy  
@@ -119,22 +119,22 @@ Make sure the Flask backend is running on `localhost:5001`.
 
 ---
 
-## 📊 Dataset Overview
+## Dataset Overview
 
-📚 **Mapped to Report Section 5.3.5**
+**Mapped to Report Section 5.3.5**
 
 | Dataset Type | Description | Pinecone Namespace |
 |--------------|-------------|--------------------|
 | 🇮🇳 Indian Cultural Context | Family, beliefs, collectivism | `indian_culture` |
-| 📘 SAMHSA Guidelines | Clinical treatments & meds | `samhsa_guidelines` |
-| 💬 Forum Chat Logs | Empathetic support examples | `chat_logs` |
-| 🧠 CBT Techniques | 15 strategies for mental health | `cbt_techniques` |
-| 📄 PHQ-9 | 9-point depression scale | `phq9_intents` |
-| 🌐 Web-Scraped Info | WHO, NIMH, VeryWellMind | `web_anxiety`, etc. |
+| SAMHSA Guidelines | Clinical treatments & meds | `samhsa_guidelines` |
+| Forum Chat Logs | Empathetic support examples | `chat_logs` |
+| CBT Techniques | 15 strategies for mental health | `cbt_techniques` |
+| PHQ-9 | 9-point depression scale | `phq9_intents` |
+| Web-Scraped Info | WHO, NIMH, VeryWellMind | `web_anxiety`, etc. |
 
 ---
 
-## 📤 Deployment Notes
+## Deployment Notes
 
 - Currently tested on **localhost**
 - Future-ready for deployment on **Heroku**, **Render**, or **AWS**
@@ -142,13 +142,13 @@ Make sure the Flask backend is running on `localhost:5001`.
 
 ---
 
-## 🔚 Authors & Credits
+## Authors & Credits
 
-**👩‍💻 Team Members:**  
+** Team Members:**  
 Sai Pranavi Kurapati, Sayali Bayaskar, Divija Choudhary, Armaghan Abtahi
 
-**📖 Advisor:**  
+** Advisor:**  
 Professor Kaikai Liu
 
-📄 **Final Report (PDF)**  
-📦 GitHub Repo: https://github.com/SayaliVB/MentalHealthChatbot
+**Final Report (PDF)**  
+GitHub Repo: https://github.com/SayaliVB/MentalHealthChatbot
