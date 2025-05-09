@@ -4,7 +4,7 @@ A culturally sensitive AI-powered mental health chatbot using LangChain, GPT-4, 
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 This chatbot addresses global mental health challenges by:
 
@@ -35,7 +35,7 @@ Frontend (React) <--> Flask Backend (LangChain + GPT-4) <--> PostgreSQL + Pineco
 
 ---
 
-## 🔍 Component Mapping to Report
+## Component Mapping to Report
 
 | Component | Description | Code Path | Report Chapter |
 |----------|-------------|-----------|----------------|
@@ -56,7 +56,7 @@ Frontend (React) <--> Flask Backend (LangChain + GPT-4) <--> PostgreSQL + Pineco
 
 ---
 
-## 💬 Features
+## Features
 
 | Feature | Description |
 |--------|-------------|
