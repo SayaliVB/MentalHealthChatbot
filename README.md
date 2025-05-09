@@ -144,10 +144,10 @@ Make sure the Flask backend is running on `localhost:5001`.
 
 ## Authors & Credits
 
-** Team Members:**  
+**Team Members:**  
 Sai Pranavi Kurapati, Sayali Bayaskar, Divija Choudhary, Armaghan Abtahi
 
-** Advisor:**  
+**Advisor:**  
 Professor Kaikai Liu
 
 **Final Report (PDF)**  
